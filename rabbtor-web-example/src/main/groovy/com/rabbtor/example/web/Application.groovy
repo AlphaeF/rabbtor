@@ -1,6 +1,6 @@
 package com.rabbtor.example.web
 
-import com.rabbtor.web.config.EnableRabbtorWebMvc
+import com.rabbtor.web.servlet.mvc.config.EnableRabbtorWebMvc
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 

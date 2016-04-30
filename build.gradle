@@ -158,6 +158,26 @@ subprojects { project ->
             exclude group: 'org.codehaus.groovy', module: 'groovy'
             exclude group: 'org.hamcrest', module: 'hamcrest-core'
         }
+
+        if (project.name != "rabbtor-docs") {
+
+
+            // Logging
+//            compile "org.slf4j:slf4j-api:$slf4jVersion"
+//            compile "org.slf4j:jcl-over-slf4j:$slf4jVersion"
+
+            // Testing
+            testCompile "junit:junit:${junitVersion}"
+
+            testCompile("org.spockframework:spock-core:${spockVersion}") {
+                transitive = false
+                exclude group:'junit', module: 'junit-dep'
+                exclude group:'org.codehaus.groovy', module: 'groovy-all'
+            }
+            // Required by Spock's Mocking
+            testCompile "cglib:cglib-nodep:${cglibVersion}"
+            testCompile "org.objenesis:objenesis:${objenesisVersion}"
+        }
     }
 
     test {

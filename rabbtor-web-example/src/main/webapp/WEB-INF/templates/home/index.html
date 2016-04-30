@@ -5,5 +5,9 @@
     Hi baby <span th:text="${id}" />
     <a href="${id}" ></a>
 
+    <p th:utext="${@handlerMethodIncludeHelper.include('/list',#ctx.httpServletRequest,#ctx.httpServletResponse,{id: new String[] {'20'}})}" >
+        Include text here
+    </p>
+
 
 </html>

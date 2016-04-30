@@ -1,6 +1,8 @@
-package com.rabbtor.web.config
+package com.rabbtor.web.servlet.mvc.config
 
-
+import com.rabbtor.web.servlet.handler.ActionMethodNamingStrategy
+import com.rabbtor.web.servlet.mvc.method.HandlerMethodIncludeHelper
+import com.rabbtor.web.servlet.mvc.method.RabbtorRequestMappingHandlerMapping
 import groovy.transform.CompileStatic
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -33,5 +35,15 @@ class DelegatingRabbtorWebMvcConfiguration extends DelegatingWebMvcConfiguration
         return super.requestMappingHandlerMapping()
     }
 
+    @Override
+    protected RequestMappingHandlerMapping createRequestMappingHandlerMapping() {
+        def mapping =  new RabbtorRequestMappingHandlerMapping()
+        mapping
+    }
+
+    @Bean
+    HandlerMethodIncludeHelper handlerMethodIncludeHelper() {
+        return new HandlerMethodIncludeHelper()
+    }
 
 }

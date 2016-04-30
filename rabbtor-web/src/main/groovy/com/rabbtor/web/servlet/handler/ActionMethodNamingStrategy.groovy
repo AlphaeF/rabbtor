@@ -1,4 +1,4 @@
-package com.rabbtor.web.mvc
+package com.rabbtor.web.servlet.handler
 
 import groovy.transform.CompileStatic
 import org.springframework.util.StringUtils
