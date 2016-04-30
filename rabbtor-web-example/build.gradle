@@ -1,0 +1,53 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+        classpath "org.springframework:springloaded:$springLoadedVersion"
+    }
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+apply plugin: 'idea'
+apply plugin: 'groovy'
+apply plugin: 'spring-boot'
+apply plugin: 'war'
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+ext {
+    groovyVersion = "2.4.4"
+    thymeleafVersion = "2.1.4.RELEASE"
+}
+
+dependencies {
+
+    compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
+
+    compile "org.springframework.boot:spring-boot-starter-logging"
+    compile "org.springframework.boot:spring-boot-autoconfigure"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-starter-tomcat"
+    compile "org.springframework.boot:spring-boot-starter-web"
+
+    compile "org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}"
+
+    compile (project(':rabbtor-web'))
+}
+
+
+// this enables spring loaded hot swapping for idea
+idea {
+    module {
+        inheritOutputDirs = false
+        outputDir = file("$buildDir/classes/main/")
+    }
+}

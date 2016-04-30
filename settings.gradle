@@ -1,0 +1,5 @@
+rootProject.name = 'rabbtor.ROOT'
+include 'rabbtor-core'
+include 'rabbtor-web-example'
+include 'rabbtor-web'
+

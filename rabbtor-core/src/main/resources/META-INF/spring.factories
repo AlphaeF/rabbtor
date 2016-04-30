@@ -1,0 +1,4 @@
+org.springframework.boot.env.PropertySourceLoader=\
+com.rabbtor.core.config.GroovyConfigPropertySourceLoader,\
+org.springframework.boot.env.PropertiesPropertySourceLoader,\
+org.springframework.boot.env.YamlPropertySourceLoader
