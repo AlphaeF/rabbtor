@@ -18,29 +18,47 @@ repositories {
 apply plugin: 'idea'
 apply plugin: 'groovy'
 apply plugin: 'spring-boot'
-apply plugin: 'war'
+apply plugin: 'application'
 
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"
 
 ext {
     groovyVersion = "2.4.4"
-    thymeleafVersion = "2.1.4.RELEASE"
+    thymeleafVersion = "3.0.0.BETA03"
+    tomcatVersion = "8.0.32"
+    jstlVersion = "1.2"
+    gspVersion = "1.0.0"
+    freemarkerVersion = '2.3.24-incubating'
+
 }
+
+ext['spring.version'] = '4.3.0.BUILD-SNAPSHOT'
+
 
 dependencies {
 
+
     compile "org.codehaus.groovy:groovy-all:${groovyVersion}"
 
-    compile "org.springframework.boot:spring-boot-starter-logging"
-    compile "org.springframework.boot:spring-boot-autoconfigure"
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-tomcat"
-    compile "org.springframework.boot:spring-boot-starter-web"
-
-    compile "org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}"
+    compile ("org.springframework.boot:spring-boot-starter-logging")
+    compile ("org.springframework.boot:spring-boot-autoconfigure")
+    compile ("org.springframework.boot:spring-boot-starter-actuator")
+    compile ("org.springframework.boot:spring-boot-starter-tomcat")
+    compile ("org.springframework.boot:spring-boot-starter-web")
+    compile ("org.springframework.boot:spring-boot-starter-freemarker")
 
     compile (project(':rabbtor-web'))
+    //compile (project(':rabbtor-autoconfigure'))
+
+    compile ("org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}")
+    compile ("javax.servlet:jstl:${jstlVersion}")
+
+    compile ("org.thymeleaf:thymeleaf:${thymeleafVersion}")
+    compile ("org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}")
+
+    compile ("org.freemarker:freemarker:${freemarkerVersion}")
+
 }
 
 
@@ -51,3 +69,6 @@ idea {
         outputDir = file("$buildDir/classes/main/")
     }
 }
+
+
+

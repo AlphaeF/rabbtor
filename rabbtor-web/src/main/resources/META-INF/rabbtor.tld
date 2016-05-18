@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+		version="2.0">
+
+	<description>Rabbtor Framework JSP Tag Library</description>
+	<tlib-version>4.0</tlib-version>
+	<short-name>rabbtor</short-name>
+	<uri>http://rabbtor.rabbytes.com/tags</uri>
+
+
+	<tag>
+		<name>include</name>
+		<tag-class>com.rabbtor.web.servlet.tags.IncludeTag</tag-class>
+		<body-content>JSP</body-content>
+		<attribute>
+			<description>Set path of the web resource to be included.</description>
+			<name>path</name>
+			<required>true</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Set if the current request parameters should be used in the included request.Default is 'false'.</description>
+			<name>includeRequestParams</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Set all custom request params as a Map.</description>
+			<name>params</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<description>Set HTML escaping for this tag, as a boolean value. Overrides the
+				default HTML escaping setting for the current page.</description>
+			<name>htmlEscape</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+	</tag>
+
+</taglib>

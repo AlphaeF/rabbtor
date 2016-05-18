@@ -1,0 +1,11 @@
+ext {
+    grailsVersion="3.1.6"
+}
+
+
+dependencies {
+    compile (project(':rabbtor-common'))
+    compile ("org.grails:grails-encoder:${grailsVersion}") {
+        exclude group:'*'
+    }
+}

@@ -1,4 +1,8 @@
 
 dependencies {
     compile (project(':rabbtor-core'))
+    compileOnly ("javax.servlet.jsp:javax.servlet.jsp-api:${jspVersion}")
+    compileOnly ("org.thymeleaf:thymeleaf:${thymeleafVersion}")
+    compileOnly ("org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}")
+    compileOnly ("org.freemarker:freemarker:${freemarkerVersion}")
 }

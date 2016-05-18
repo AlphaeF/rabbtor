@@ -1,0 +1,15 @@
+
+ext {
+    grailsVersion="3.1.6"
+    groovyVersion="2.4.6"
+}
+
+
+dependencies {
+    compile (project(':rabbtor-common'))
+    compile (project(':rabbtor-gsp-taglib'))
+    compile ("org.codehaus.groovy:groovy-templates:${groovyVersion}")
+    compile ("org.grails:grails-encoder:${grailsVersion}") {
+        exclude group:'*'
+    }
+}

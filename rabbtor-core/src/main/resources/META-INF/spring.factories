@@ -1,4 +1,7 @@
 org.springframework.boot.env.PropertySourceLoader=\
-com.rabbtor.core.config.GroovyConfigPropertySourceLoader,\
+com.rabbtor.config.GroovyConfigPropertySourceLoader,\
 org.springframework.boot.env.PropertiesPropertySourceLoader,\
 org.springframework.boot.env.YamlPropertySourceLoader
+
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.rabbtor.boot.autoconfigure.ModelMetadataAutoConfiguration

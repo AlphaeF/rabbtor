@@ -3,4 +3,7 @@ include 'rabbtor-core'
 include 'rabbtor-web-example'
 include 'rabbtor-web'
 include 'rabbtor-common'
+include 'rabbtor-autoconfigure'
+include 'rabbtor-gsp'
+include 'rabbtor-gsp-taglib'
 

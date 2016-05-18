@@ -20,17 +20,27 @@ public class CaseInsensitiveHashMap<T> implements Map<String,T>
     }
 
     public CaseInsensitiveHashMap(Locale locale) {
-        setLocaleAndMap(locale,new HashMap<>());
+        setLocaleAndMap(locale,createMap());
+    }
 
+    protected Map<CaseInsensitiveMapKey, T> createMap()
+    {
+        return new HashMap<>();
     }
 
     public CaseInsensitiveHashMap(int initialCapacity) {
-        setLocaleAndMap(null,new HashMap<>(initialCapacity));
+
+        setLocaleAndMap(null,createMap(initialCapacity));
     }
 
 
     public CaseInsensitiveHashMap(int initialCapacity, Locale locale) {
-        setLocaleAndMap(locale,new HashMap<>(initialCapacity));
+        setLocaleAndMap(locale,createMap(initialCapacity));
+    }
+
+    protected Map<CaseInsensitiveMapKey, T> createMap(int initialCapacity)
+    {
+        return new HashMap<>(initialCapacity);
     }
 
     public CaseInsensitiveHashMap(Map<? extends String, ? extends T> map) {

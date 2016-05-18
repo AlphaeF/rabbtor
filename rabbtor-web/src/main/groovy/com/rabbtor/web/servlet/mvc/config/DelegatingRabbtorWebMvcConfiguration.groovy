@@ -1,7 +1,6 @@
 package com.rabbtor.web.servlet.mvc.config
 
-import com.rabbtor.web.servlet.handler.ActionMethodNamingStrategy
-import com.rabbtor.web.servlet.mvc.method.HandlerMethodIncludeHelper
+
 import com.rabbtor.web.servlet.mvc.method.RabbtorRequestMappingHandlerMapping
 import groovy.transform.CompileStatic
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,8 +12,10 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 @CompileStatic
 @Configuration
+//@Import(RabbtorDispatcherServletConfiguration)
 class DelegatingRabbtorWebMvcConfiguration extends DelegatingWebMvcConfiguration
 {
+
 
     private final RabbtorWebMvcConfigurerComposite routeConfigurers = new RabbtorWebMvcConfigurerComposite();
 
@@ -40,10 +41,4 @@ class DelegatingRabbtorWebMvcConfiguration extends DelegatingWebMvcConfiguration
         def mapping =  new RabbtorRequestMappingHandlerMapping()
         mapping
     }
-
-    @Bean
-    HandlerMethodIncludeHelper handlerMethodIncludeHelper() {
-        return new HandlerMethodIncludeHelper()
-    }
-
 }
