@@ -15,14 +15,6 @@ repositories {
     jcenter()
 }
 
-apply plugin: 'idea'
-apply plugin: 'groovy'
-apply plugin: 'spring-boot'
-apply plugin: 'application'
-
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
-
 ext {
     groovyVersion = "2.4.4"
     thymeleafVersion = "3.0.0.BETA03"
@@ -33,7 +25,17 @@ ext {
 
 }
 
-ext['spring.version'] = '4.3.0.BUILD-SNAPSHOT'
+ext['spring.version'] = '4.2.6.RELEASE'
+
+apply plugin: 'idea'
+apply plugin: 'groovy'
+apply plugin: 'spring-boot'
+apply plugin: 'application'
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+
 
 
 dependencies {
