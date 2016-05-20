@@ -17,8 +17,8 @@
 package com.rabbtor.web.servlet.tags;
 
 
+import com.rabbtor.web.servlet.support.RequestIncludeHelper;
 import org.springframework.util.Assert;
-import org.springframework.web.servlet.support.RequestIncludeHelper;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
 import org.springframework.web.servlet.tags.Param;
 import org.springframework.web.servlet.tags.ParamAware;
@@ -58,7 +58,7 @@ import java.util.Map;
  * </p>
  *
  * @author Cagatay Kalan
- * @see org.springframework.web.servlet.support.ResponseIncludeWrapper
+ * @see com.rabbtor.web.servlet.support.ResponseIncludeWrapper
  */
 @SuppressWarnings("serial")
 public class IncludeTag extends HtmlEscapingAwareTag implements ParamAware
@@ -117,7 +117,10 @@ public class IncludeTag extends HtmlEscapingAwareTag implements ParamAware
 
         try
         {
-            String content = includeRequestParams == null ? includeHelper.include(request,response,path,params) : includeHelper.include(request,response,path,params,includeRequestParams);
+            if (includeRequestParams != null)
+                this.includeHelper.setIncludeRequestParams(includeRequestParams);
+
+            String content = includeHelper.include(path,request,response);
             pageContext.getOut().print(htmlEscape(content));
         } catch (ServletException e)
         {
