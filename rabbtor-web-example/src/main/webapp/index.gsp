@@ -9,9 +9,10 @@
         <p>Session: ${applicationContext}</p>
 
         <g:set var="name" scope="request" value="100" />
+        <t:write />
 
-        <g:resource dir="css" file="test.css" />
 
-        ${name}
+
+        ${'<a href="#" >Link</a>'}
     </body>
 </html>

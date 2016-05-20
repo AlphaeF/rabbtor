@@ -4,8 +4,5 @@ ext {
 
 
 dependencies {
-    compile (project(':rabbtor-common'))
-    compile ("org.grails:grails-encoder:${grailsVersion}") {
-        exclude group:'*'
-    }
+    compile (project(':rabbtor-encoder'))
 }

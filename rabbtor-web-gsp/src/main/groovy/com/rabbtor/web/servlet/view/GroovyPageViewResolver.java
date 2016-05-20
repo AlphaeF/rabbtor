@@ -62,9 +62,10 @@ public class GroovyPageViewResolver extends InternalResourceViewResolver
     }
 
     public GroovyPageViewResolver(GroovyPagesTemplateEngine templateEngine, String prefix, String suffix) {
-        super(prefix,suffix);
 
         setCache(false);
+        setPrefix(prefix);
+        setSuffix(suffix);
         setOrder(Ordered.LOWEST_PRECEDENCE - 20);
         setTemplateEngine(templateEngine);
         this.groovyPageLocator = templateEngine.getGroovyPageLocator();

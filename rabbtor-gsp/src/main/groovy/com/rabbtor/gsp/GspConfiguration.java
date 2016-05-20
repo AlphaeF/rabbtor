@@ -30,11 +30,7 @@ public class GspConfiguration
     @Value("${spring.gsp.templateRoots:#{null}}")
     private String[] templateRoots;
 
-    @Value("${spring.gsp.development.profiles:'dev,development'}")
-    private String developmentProfileNames;
 
-    @Autowired
-    Environment environment;
 
 
     public boolean isCacheResources()
@@ -59,13 +55,7 @@ public class GspConfiguration
         this.sitemeshPreprocessEnabled = sitemeshPreprocessEnabled;
     }
 
-    public boolean isDevelopmentMode()
-    {
-        if (environment != null && StringUtils.hasText(developmentProfileNames))
-            return environment.acceptsProfiles(developmentProfileNames);
 
-        return false;
-    }
 
 
 
@@ -113,13 +103,4 @@ public class GspConfiguration
         this.templateRoots = templateRoots;
     }
 
-    public Environment getEnvironment()
-    {
-        return environment;
-    }
-
-    public void setEnvironment(Environment environment)
-    {
-        this.environment = environment;
-    }
 }

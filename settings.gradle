@@ -7,4 +7,5 @@ include 'rabbtor-autoconfigure'
 include 'rabbtor-gsp'
 include 'rabbtor-gsp-taglib'
 include 'rabbtor-web-gsp'
+include 'rabbtor-encoder'
 

@@ -15,13 +15,16 @@
  */
 package com.rabbtor.web.servlet.gsp.tags
 
+import com.rabbtor.gsp.DefaultGspEnvironment
 import com.rabbtor.gsp.GroovyPagesTemplateEngine
 import com.rabbtor.gsp.GspConfiguration
+import com.rabbtor.gsp.GspEnvironment
 import com.rabbtor.taglib.NamespacedTagDispatcher
 import com.rabbtor.taglib.TagLibraryLookup
 import com.rabbtor.taglib.TagLibraryMetaUtils
 import com.rabbtor.taglib.TagOutput
 import com.rabbtor.taglib.encoder.WithCodecHelper
+import com.rabbtor.util.BeanFactoryUtils
 import com.rabbtor.util.MetaClassUtils
 import com.rabbtor.web.servlet.mvc.RabbtorWebRequest
 import com.rabbtor.web.servlet.support.WebAttributes
@@ -41,7 +44,14 @@ import org.springframework.context.ApplicationContext
 trait TagLibraryInvoker extends WebAttributes{
 
 
+    private GspEnvironment gspEnvironment
+
     private TagLibraryLookup tagLibraryLookup
+
+    @Autowired
+    void setGspEnvironment(GspEnvironment gspEnvironment) {
+        this.gspEnvironment = gspEnvironment
+    }
 
 
     @Autowired
@@ -149,10 +159,7 @@ trait TagLibraryInvoker extends WebAttributes{
     }
 
     public boolean isDevelopmentMode() {
-        ApplicationContext applicationContext = getApplicationContext()
-        if (applicationContext == null)
-            return false
-        return applicationContext.getBean(GspConfiguration).isDevelopmentMode()
+        return gspEnvironment?.developmentMode
     }
 
 

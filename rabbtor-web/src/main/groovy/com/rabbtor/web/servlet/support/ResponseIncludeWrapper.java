@@ -86,7 +86,7 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
 
     private final HttpServletResponse responseDelegate;
 
-    private static final Log logger = LogFactory.getLog(org.springframework.web.servlet.support.ResponseIncludeWrapper.class);
+    private static final Log logger = LogFactory.getLog(ResponseIncludeWrapper.class);
 
     static
     {

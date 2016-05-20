@@ -1,5 +1,6 @@
 package com.rabbtor.web.servlet.gsp.tags
 
+import com.rabbtor.gsp.GspEnvironment
 import com.rabbtor.taglib.GspTagException
 import com.rabbtor.taglib.TagLibraryLookup
 import com.rabbtor.taglib.TagLibraryMetaUtils
@@ -15,6 +16,8 @@ import groovy.transform.CompileDynamic
 import org.codehaus.groovy.runtime.InvokerHelper
 import org.grails.buffer.GrailsPrintWriter
 import org.grails.encoder.Encoder
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 import org.springframework.web.context.request.RequestAttributes
 
 import javax.annotation.PostConstruct
@@ -23,6 +26,8 @@ import javax.annotation.PostConstruct
 trait TagLibrary extends TagLibraryInvoker
 {
     private Encoder rawEncoder
+
+
 
     @PostConstruct
     void initializeTagLibrary() {

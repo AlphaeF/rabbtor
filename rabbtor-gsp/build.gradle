@@ -6,10 +6,7 @@ ext {
 
 
 dependencies {
-    compile (project(':rabbtor-common'))
     compile (project(':rabbtor-gsp-taglib'))
     compile ("org.codehaus.groovy:groovy-templates:${groovyVersion}")
-    compile ("org.grails:grails-encoder:${grailsVersion}") {
-        exclude group:'*'
-    }
+
 }

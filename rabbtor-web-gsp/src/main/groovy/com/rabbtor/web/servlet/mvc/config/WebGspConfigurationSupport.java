@@ -1,8 +1,11 @@
 package com.rabbtor.web.servlet.mvc.config;
 
 
+import com.rabbtor.encoder.StandaloneCodecLookup;
+import com.rabbtor.gsp.DefaultGspEnvironment;
 import com.rabbtor.gsp.GroovyPagesTemplateEngine;
 import com.rabbtor.gsp.GspConfiguration;
+import com.rabbtor.gsp.GspEnvironment;
 import com.rabbtor.gsp.io.DefaultGroovyPageLocator;
 import com.rabbtor.gsp.io.GroovyPageLocator;
 import com.rabbtor.taglib.TagLibrariesBeanFactoryPostProcessor;
@@ -11,8 +14,11 @@ import com.rabbtor.web.servlet.gsp.GroovyPagesServlet;
 import com.rabbtor.web.servlet.gsp.tags.ApplicationTagLib;
 import com.rabbtor.web.servlet.view.GroovyPageViewResolver;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.embedded.ServletContextInitializer;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -26,9 +32,17 @@ public class WebGspConfigurationSupport
 {
 
 
-
     @Autowired(required = false)
     private GspConfiguration configuration;
+
+    @Autowired(required = false)
+    private GspEnvironment gspEnvironment;
+
+    @Bean
+    @ConditionalOnMissingBean(GspEnvironment.class)
+    GspEnvironment gspEnvironment() {
+        return new DefaultGspEnvironment();
+    }
 
     @Bean
     GroovyPagesServlet groovyPagesServlet() {
@@ -44,10 +58,12 @@ public class WebGspConfigurationSupport
         templateEngine.setGroovyPageLocator(defaultGroovyPageLocator());
 
         GspConfiguration config = getConfiguration();
-        templateEngine.setDevelopmentMode(configuration.isDevelopmentMode());
         templateEngine.setReloadEnabled(config.isReloadEnabled());
         templateEngine.setEncoding(config.getEncoding());
         templateEngine.setSitemeshPreprocessEnabled(config.isSitemeshPreprocessEnabled());
+
+        templateEngine.setDevelopmentMode(getGspEnvironment().isDevelopmentMode());
+
 
         return templateEngine;
     }
@@ -57,15 +73,7 @@ public class WebGspConfigurationSupport
         return new TagLibraryLookup();
     }
 
-    private GspConfiguration getConfiguration()
-    {
-        if (configuration == null)
-            configuration = gspConfiguration();
 
-        setConfigProperties(configuration);
-
-        return configuration;
-    }
 
 
     protected void setConfigProperties(GspConfiguration configuration)
@@ -87,7 +95,7 @@ public class WebGspConfigurationSupport
         GspConfiguration config = getConfiguration();
         locator.setReloadEnabled(config.isReloadEnabled());
         locator.setTemplateRoots(config.getTemplateRoots());
-        locator.setDevelopmentMode(config.isDevelopmentMode());
+        locator.setDevelopmentMode(getGspEnvironment().isDevelopmentMode());
 
         return locator;
     }
@@ -140,5 +148,32 @@ public class WebGspConfigurationSupport
         return new TagLibrariesBeanFactoryPostProcessor();
     }
 
+    @Bean
+    StandaloneCodecLookup codecLookup() {
+        StandaloneCodecLookup codecLookup = new StandaloneCodecLookup();
+        registerCodecs(codecLookup);
+        return codecLookup;
+    }
 
+    protected void registerCodecs(StandaloneCodecLookup codecLookup)
+    {
+
+    }
+
+
+    private GspConfiguration getConfiguration()
+    {
+        if (configuration == null)
+            configuration = gspConfiguration();
+
+        setConfigProperties(configuration);
+
+        return configuration;
+    }
+
+    private GspEnvironment getGspEnvironment() {
+        if (gspEnvironment == null)
+            gspEnvironment = gspEnvironment();
+        return gspEnvironment;
+    }
 }

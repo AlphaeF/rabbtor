@@ -32,7 +32,7 @@ public class TagLibrariesBeanFactoryPostProcessor implements BeanFactoryPostProc
                     {
 
                         Class clazz = tryGetClass(bean);
-                        if (clazz != null && AnnotatedElementUtils.hasAnnotation(clazz,TagLib.class))
+                        if (clazz != null && clazz.isAnnotationPresent(TagLib.class))
                         {
                             DefaultTagLibClass tagLibClass = new DefaultTagLibClass(clazz,name, "TagLib");
                             beanFactory.registerSingleton(tagLibClass.getFullName()+"Class", tagLibClass);
