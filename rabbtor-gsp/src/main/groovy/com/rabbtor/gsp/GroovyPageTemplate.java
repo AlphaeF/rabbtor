@@ -31,28 +31,36 @@ import java.util.Map;
  */
 public class GroovyPageTemplate implements Template, Cloneable
 {
-    private final OutputContextLookup outputContextLookup;
+
     private GroovyPageMetaInfo metaInfo;
     private boolean allowSettingContentType = false;
 
     public GroovyPageTemplate(GroovyPageMetaInfo metaInfo) {
-        this(metaInfo, OutputContextLookupHelper.getOutputContextLookup());
-    }
-
-    public GroovyPageTemplate(GroovyPageMetaInfo metaInfo, OutputContextLookup outputContextLookup) {
         this.metaInfo = metaInfo;
-        this.outputContextLookup = outputContextLookup;
     }
 
     public Writable make() {
-        return new GroovyPageWritable(metaInfo, outputContextLookup, allowSettingContentType);
+        return make(null,null);
     }
+
+    public Writable make(OutputContextLookup outputContextLookup) {
+        return make(null,outputContextLookup);
+    }
+
+    public Writable make(Map binding, OutputContextLookup outputContextLookup) {
+        if (outputContextLookup == null)
+            outputContextLookup = OutputContextLookupHelper.getOutputContextLookup();
+
+        GroovyPageWritable gptw = new GroovyPageWritable(metaInfo, outputContextLookup, allowSettingContentType);
+        if (binding != null)
+            gptw.setBinding(binding);
+        return gptw;
+    }
+
 
     @SuppressWarnings("rawtypes")
     public Writable make(Map binding) {
-        GroovyPageWritable gptw = new GroovyPageWritable(metaInfo, outputContextLookup, allowSettingContentType);
-        gptw.setBinding(binding);
-        return gptw;
+        return make(binding,null);
     }
 
     public GroovyPageMetaInfo getMetaInfo() {

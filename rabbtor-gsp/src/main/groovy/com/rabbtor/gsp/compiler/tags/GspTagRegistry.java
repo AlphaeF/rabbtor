@@ -69,7 +69,7 @@ public class GspTagRegistry
         return false;
     }
 
-    public GrailsTag newTag(String tagName) {
+    public GspTag newTag(String tagName) {
         if (!tagRegistry.containsKey(tagName)) {
             throw new GspTagException("Tag [" + tagName + "] is not a a valid grails tag");
         }
@@ -77,7 +77,7 @@ public class GspTagRegistry
         Class<?> tagClass = tagRegistry.get(tagName);
 
         try {
-            return (GrailsTag)tagClass.newInstance();
+            return (GspTag)tagClass.newInstance();
         }
         catch (InstantiationException e) {
             throw new GspTagException("Instantiation error loading tag ["+tagName+"]: " + e.getMessage(), e);

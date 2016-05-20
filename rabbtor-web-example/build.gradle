@@ -48,7 +48,11 @@ dependencies {
     compile ("org.springframework.boot:spring-boot-starter-web")
     compile ("org.springframework.boot:spring-boot-starter-freemarker")
 
+    compile group: 'org.sitemesh', name: 'sitemesh', version: '3.0.1'
+
+
     compile (project(':rabbtor-web'))
+    compile (project(":rabbtor-web-gsp"))
     //compile (project(':rabbtor-autoconfigure'))
 
     compile ("org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}")

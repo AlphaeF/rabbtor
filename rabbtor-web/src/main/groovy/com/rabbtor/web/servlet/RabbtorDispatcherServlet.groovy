@@ -18,7 +18,7 @@ class RabbtorDispatcherServlet extends DispatcherServlet
     protected ServletRequestAttributes buildRequestAttributes(HttpServletRequest request, HttpServletResponse response, RequestAttributes previousAttributes)
     {
         if (previousAttributes == null || !(previousAttributes instanceof RabbtorWebRequest)) {
-            def webRequest = new RabbtorWebRequest(request, response)
+            def webRequest = new RabbtorWebRequest(request, response, getServletContext(), getWebApplicationContext())
             return webRequest;
         }
         else {

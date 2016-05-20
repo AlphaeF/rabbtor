@@ -16,8 +16,6 @@
 package com.rabbtor.gsp.io;
 
 
-import com.rabbtor.DefaultRabbtorEnvironment;
-import com.rabbtor.RabbtorEnvironment;
 import com.rabbtor.gsp.GroovyPage;
 import com.rabbtor.io.ResourceUtils;
 import com.rabbtor.taglib.TemplateVariableBinding;
@@ -30,13 +28,11 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.Assert;
 
 import java.net.URL;
 import java.security.PrivilegedAction;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
@@ -62,17 +58,12 @@ public class DefaultGroovyPageLocator implements GroovyPageLocator, ResourceLoad
 
 
     private boolean reloadEnabled;
-    private RabbtorEnvironment environment;
-    private ApplicationContext applicationContext;
+    private boolean developmentMode;
+
+    private String[] templateRoots = null;
 
     public DefaultGroovyPageLocator()
     {
-        reloadEnabled = !isWarDeployed();
-    }
-
-    public DefaultGroovyPageLocator(RabbtorEnvironment environment)
-    {
-        this.environment = environment;
         reloadEnabled = !isWarDeployed();
     }
 
@@ -130,7 +121,7 @@ public class DefaultGroovyPageLocator implements GroovyPageLocator, ResourceLoad
 
     protected GroovyPageCompiledScriptSource createGroovyPageCompiledScriptSource(final String uri, String fullPath, Class<?> viewClass) {
         GroovyPageCompiledScriptSource scriptSource = new GroovyPageCompiledScriptSource(uri, fullPath,viewClass);
-        if (isReloadEnabled()) {
+        if (reloadEnabled) {
             scriptSource.setResourceCallable(new PrivilegedAction<Resource>() {
                 public Resource run() {
                     return findReloadablePage(uri);
@@ -163,18 +154,18 @@ public class DefaultGroovyPageLocator implements GroovyPageLocator, ResourceLoad
 
     protected List<String> resolveSearchPaths(String uri) {
         List<String> searchPaths = null;
-
-        uri = removeViewLocationPrefixes(uri);
-        if (isWarDeployed()) {
-                searchPaths = CollectionUtils.newList(
-                    ResourceUtils.appendPiecesForUri(PATH_TO_WEB_INF_VIEWS, uri),
-                    uri);
-
+        if (this.templateRoots != null)
+        {
+            searchPaths = new ArrayList<>();
+            for (String loaderPath : templateRoots) {
+                searchPaths.add(ResourceUtils.appendPiecesForUri(loaderPath,uri));
+            }
         }
+
         else {
             searchPaths = CollectionUtils.newList(
-                ResourceUtils.appendPiecesForUri(PATH_TO_WEB_INF_VIEWS, uri),
-                uri);
+                    ResourceUtils.appendPiecesForUri(PATH_TO_WEB_INF_VIEWS, uri),
+                    uri);
         }
         return searchPaths;
     }
@@ -230,33 +221,35 @@ public class DefaultGroovyPageLocator implements GroovyPageLocator, ResourceLoad
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException
     {
         addResourceLoader(applicationContext);
-        this.applicationContext = applicationContext;
-
     }
 
+    public String[] getTemplateRoots()
+    {
+        return templateRoots;
+    }
 
+    public void setTemplateRoots(String[] templateRoots)
+    {
+        this.templateRoots = templateRoots;
+    }
 
-    public boolean isReloadEnabled() {
+    public boolean isReloadEnabled()
+    {
         return reloadEnabled;
     }
 
-    public void setReloadEnabled(boolean reloadEnabled) {
+    public void setReloadEnabled(boolean reloadEnabled)
+    {
         this.reloadEnabled = reloadEnabled;
     }
 
-    public void setEnvironment(RabbtorEnvironment environment)
+    public boolean isDevelopmentMode()
     {
-        this.environment = environment;
+        return developmentMode;
     }
 
-    protected boolean isDevelopmentMode()
+    public void setDevelopmentMode(boolean developmentMode)
     {
-        if (this.environment == null && this.applicationContext != null) {
-            this.environment = this.applicationContext.getBean(RabbtorEnvironment.class);
-            if (this.environment == null)
-                this.environment = new DefaultRabbtorEnvironment(this.applicationContext.getEnvironment());
-        }
-
-        return this.environment == null ? false : this.environment.isDevelopment();
+        this.developmentMode = developmentMode;
     }
 }

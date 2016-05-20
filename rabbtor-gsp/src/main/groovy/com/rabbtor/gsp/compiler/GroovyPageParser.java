@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.grails.buffer.FastStringWriter;
 import org.grails.buffer.StreamByteBuffer;
 import org.grails.buffer.StreamCharBuffer;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
@@ -74,6 +75,7 @@ public class GroovyPageParser implements Tokens
 
     private static final String MULTILINE_GROOVY_STRING_DOUBLEQUOTES = "\"\"\"";
     private static final String MULTILINE_GROOVY_STRING_SINGLEQUOTES = "'''";
+    private static final String HTML_CODEC_DIRECTIVE = "Html";
 
     private GroovyPageScanner scan;
     private GSPWriter out;
@@ -90,6 +92,7 @@ public class GroovyPageParser implements Tokens
 
     Set<Integer> bodyVarsDefined = new HashSet<Integer>();
     Map<Integer, String> attrsVarsMapDefinition = new HashMap<Integer, String>();
+
 
     int closureLevel = 0;
 
@@ -163,8 +166,7 @@ public class GroovyPageParser implements Tokens
         return jspTags;
     }
 
-
-    private GspConfiguration configuration;
+    private ParserOptions options;
 
 
     class TagMeta
@@ -187,30 +189,31 @@ public class GroovyPageParser implements Tokens
         }
     }
 
-    public GroovyPageParser(String name, String uri, String filename, InputStream in, String encoding, String expressionCodecName, GspConfiguration configuration) throws IOException
+
+    public GroovyPageParser(ParserOptions parserOptions) throws IOException
     {
-        this(name, uri, filename, readStream(in, configuration.getDefaultEncoding()), expressionCodecName, configuration);
-    }
+        Assert.notNull(parserOptions, "parserOptions must not be null.");
+        this.options = parserOptions;
 
-    public GroovyPageParser(String name, String uri, String filename, String gspSource, GspConfiguration configuration) throws IOException
-    {
-        this(name, uri, filename, gspSource, null, configuration);
-    }
+        OutputEncodingSettings gspConfig = options.getOutputEncodingSettings();
+        if (gspConfig == null)
+            gspConfig = new DefaultOutputEncodingSettings();
 
-    public GroovyPageParser(String name, String uri, String filename, String gspSource, String expressionCodecName, GspConfiguration configuration) throws IOException
-    {
-        this.configuration = configuration;
-
-        OutputEncodingSettings gspConfig = configuration.getOutputEncodingSettings();
-
-        this.expressionCodecDirectiveValue = expressionCodecName;
+        this.expressionCodecDirectiveValue = options.getExpressionCodecName();
         if (expressionCodecDirectiveValue == null)
         {
             expressionCodecDirectiveValue = gspConfig.getCodecSettings(DefaultOutputEncodingSettings.EXPRESSION_CODEC_NAME);
         }
+        if (expressionCodecDirectiveValue == null)
+            expressionCodecDirectiveValue = HTML_CODEC_DIRECTIVE;
+
+
         staticCodecDirectiveValue = gspConfig.getCodecSettings(DefaultOutputEncodingSettings.STATIC_CODEC_NAME);
         outCodecDirectiveValue = gspConfig.getCodecSettings(DefaultOutputEncodingSettings.OUT_CODEC_NAME);
         taglibCodecDirectiveValue = gspConfig.getCodecSettings(DefaultOutputEncodingSettings.TAGLIB_CODEC_NAME);
+
+        String gspSource = readGspSource(options);
+
 
         Map<String, String> directives = parseDirectives(gspSource);
 
@@ -218,22 +221,26 @@ public class GroovyPageParser implements Tokens
         {
             if (LOG.isDebugEnabled())
             {
-                LOG.debug("Preprocessing " + uri + " for sitemesh. Replacing head, title, meta and body elements with sitemesh:capture*.");
+                LOG.debug("Preprocessing " + options.getTarget().getUri() + " for sitemesh. Replacing head, title, meta and body elements with sitemesh:capture*.");
             }
             // GSP preprocessing for direct sitemesh integration: replace head -> g:captureHead, title -> g:captureTitle, meta -> g:captureMeta, body -> g:captureBody
             gspSource = sitemeshPreprocessor.addGspSitemeshCapturing(gspSource);
             sitemeshPreprocessMode = true;
         }
-        scan = new GroovyPageScanner(gspSource, uri);
-        pageName = uri;
-        makeName(name);
-        makeSourceName(filename);
+        scan = new GroovyPageScanner(gspSource, options.getTarget().getUri());
+        pageName = options.getTarget().getUri();
+        makeName(options.getTarget().getName());
+        makeSourceName(options.getTarget().getFileName());
     }
 
-    public GroovyPageParser(String name, String uri, String filename, InputStream in, GspConfiguration configuration) throws IOException
+    private String readGspSource(ParserOptions options) throws IOException
     {
-        this(name, uri, filename, in, null, null, configuration);
+        if (options.getGspScriptSource() != null)
+            return options.getGspScriptSource();
+
+        return readStream(options.getGspInputStream(), options.getEncoding());
     }
+
 
     private Map<String, String> parseDirectives(String gspSource)
     {
@@ -261,7 +268,7 @@ public class GroovyPageParser implements Tokens
         {
             return Boolean.valueOf(gspFilePreprocessDirective.trim());
         }
-        return configuration.isSitemeshPreprocessingEnabled();
+        return options.isSitemeshPreprocessEnabled();
     }
 
     public int[] getLineNumberMatrix()
@@ -351,27 +358,16 @@ public class GroovyPageParser implements Tokens
 
     private File resolveKeepGeneratedDirectory()
     {
-        if (configuration.getGeneratedDirectoryLocation() != null )
-        {
-            try
-            {
-                File file = configuration.getGeneratedDirectoryLocation().getFile();
+        File file = options.getKeepGeneratedFilesDirectory();
+        if (file == null)
+            return null;
 
-                if (!file.isDirectory())
-                    LOG.warn("The directory specified with " + configuration.getGeneratedDirectoryLocation() +
-                            " config parameter doesn't exist or isn't a readable directory. Absolute path: '" +
-                            file.getAbsolutePath() + "' Keepgenerated will be disabled.");
+        if (file.isDirectory())
+            return file;
 
-                return file;
-
-            } catch (IOException e)
-            {
-                LOG.warn("The directory specified with " + configuration.getGeneratedDirectoryLocation() +
-                        " config parameter doesn't exist or isn't a readable directory.Keepgenerated will be disabled.",e);
-            }
-
-
-        }
+        LOG.warn("The directory specified with " + file.getPath() +
+                " config parameter doesn't exist or isn't a readable directory. Absolute path: '" +
+                file.getAbsolutePath() + "' Keepgenerated will be disabled.");
 
         return null;
     }
@@ -600,7 +596,7 @@ public class GroovyPageParser implements Tokens
             safeDereference = _safeDereference;
         }
         if (!precompileMode &&
-                (configuration.getEnvironment().isDevelopment() || configuration.getEnvironment().isTest()))
+                (options.isDevelopmentMode()))
         {
             String escaped = escapeGroovy(text);
             text = "evaluate('" + escaped + "', " +
@@ -615,7 +611,6 @@ public class GroovyPageParser implements Tokens
         }
         return text;
     }
-
 
 
     private String escapeGroovy(String text)
@@ -1407,13 +1402,8 @@ public class GroovyPageParser implements Tokens
 
     private static String readStream(InputStream in, String gspEncoding) throws IOException
     {
-        if (gspEncoding == null)
-        {
-            gspEncoding = "UTF-8";
-        }
         return IOUtils.toString(in, gspEncoding);
     }
-
 
 
     private void script(boolean gsp)

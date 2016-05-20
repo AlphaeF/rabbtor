@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2005 Graeme Rocher
+ * Copyright 2014 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rabbtor.taglib;
 
+package com.rabbtor.web.servlet.support
 
-import org.grails.buffer.FastStringWriter;
+import groovy.transform.CompileStatic
+import org.springframework.context.ApplicationContext
+import org.springframework.web.context.support.WebApplicationContextUtils
+
+import javax.servlet.ServletContext
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.servlet.http.HttpSession
 
 /**
- * A temporary writer used by GSP to write to a StringWriter and later retrieve the value.
- * It also converts nulls into blank strings.
+ * A trait that adds attributes specific to the Servlet API
  *
  * @author Graeme Rocher
- * @since 0.5
+ * @author Jeff Brown
+ * 
  */
-public class GroovyPageTagWriter extends FastStringWriter
-{
+@CompileStatic
+trait ServletAttributes implements WebAttributes {
 
-    private static final int DEFAULT_CHUNK_SIZE = Integer.getInteger("groovypagetagwriter.chunksize", 512);
 
-    public GroovyPageTagWriter() {
-        super(DEFAULT_CHUNK_SIZE);
-    }
+
 
 }

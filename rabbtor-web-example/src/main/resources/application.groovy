@@ -1,5 +1,7 @@
+spring.profiles.active='dev'
+
 server {
-    port= 8888
+    port= 8889
 }
 
 spring {
@@ -20,13 +22,7 @@ spring {
         }
     }
     gsp {
-        reloadingEnabled = true
-        templateRoots = '/WEB-INF/gsp'
-        layout {
-            caching = false
-        }
-        removeDefaultViewResolver = false
-        replaceViewResolverBean = false
+        templateRoots = ['/']
     }
     mvc {
         view {
@@ -37,7 +33,21 @@ spring {
 }
 
 environments {
-    'default' {
-        server.port = 8889
+
+    prod {
+        reload = false
+        cache = true
     }
+
+    dev {
+        spring {
+            gsp {
+                reload = true
+                devmode = true
+                cache = false
+            }
+        }
+    }
+
+
 }

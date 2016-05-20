@@ -14,7 +14,7 @@ class TagLibraryMetaUtils
     private final static Object[] EMPTY_OBJECT_ARRAY = new Object[0]
 
     @CompileStatic
-    static void enhanceTagLibMetaClass(final TagLibDescriptor taglib, TagLibraryLookup gspTagLibraryLookup) {
+    static void enhanceTagLibMetaClass(final TagLibClass taglib, TagLibraryLookup gspTagLibraryLookup) {
         final MetaClass mc = taglib.getMetaClass()
         final String namespace = taglib.namespace ?: TagOutput.DEFAULT_NAMESPACE
         enhanceTagLibMetaClass(mc, gspTagLibraryLookup, namespace)
@@ -74,7 +74,7 @@ class TagLibraryMetaUtils
     }
 
     static registerMethodMissingForTags(MetaClass mc, ApplicationContext ctx,
-                                        TagLibDescriptor tagLibraryClass, String name) {
+                                        TagLibClass tagLibraryClass, String name) {
         TagLibraryLookup gspTagLibraryLookup = ctx.getBean("gspTagLibraryLookup")
         String namespace = tagLibraryClass.namespace ?: TagOutput.DEFAULT_NAMESPACE
         registerMethodMissingForTags(mc, gspTagLibraryLookup, namespace, name)

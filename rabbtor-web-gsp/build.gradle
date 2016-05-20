@@ -1,0 +1,8 @@
+dependencies {
+    compile (project(":rabbtor-web"))
+    compile (project(":rabbtor-gsp"))
+    compile (project(":rabbtor-gsp-taglib"))
+    compile ("org.grails:grails-encoder:${grailsVersion}") {
+        exclude group:'*'
+    }
+}

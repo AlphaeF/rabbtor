@@ -18,11 +18,15 @@ package com.rabbtor.gsp;
 import com.rabbtor.exceptions.ExceptionUtils;
 import com.rabbtor.exceptions.reporting.DefaultErrorsPrinter;
 import com.rabbtor.gsp.compiler.GroovyPageParser;
-import com.rabbtor.gsp.compiler.GspConfiguration;
+import com.rabbtor.gsp.compiler.ParserOptions;
 import com.rabbtor.gsp.io.*;
 import com.rabbtor.gsp.jsp.TagLibraryResolver;
 import com.rabbtor.io.IOUtils;
 import com.rabbtor.taglib.TagLibraryLookup;
+import com.rabbtor.taglib.encoder.OutputContextLookup;
+import com.rabbtor.taglib.encoder.OutputContextLookupHelper;
+import com.rabbtor.taglib.encoder.OutputEncodingSettings;
+import com.rabbtor.util.CacheEntry;
 import groovy.lang.GroovyClassLoader;
 import groovy.text.Template;
 import org.apache.commons.logging.Log;
@@ -30,8 +34,12 @@ import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.runtime.IOGroovyMethods;
+import org.grails.encoder.CodecLookup;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.*;
 import org.springframework.scripting.ScriptSource;
@@ -44,7 +52,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.PrivilegedAction;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -63,7 +76,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @since 0.1
  */
-public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine implements ResourceLoaderAware,  InitializingBean, BeanClassLoaderAware
+public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine implements
+        ResourceLoaderAware,
+        InitializingBean,
+        BeanClassLoaderAware,
+        ApplicationContextAware
 {
 
     public static final String CONFIG_PROPERTY_DISABLE_CACHING_RESOURCES = "gsp.disable.caching.resources";
@@ -74,21 +91,38 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
     private static final Log LOG = LogFactory.getLog(GroovyPagesTemplateEngine.class);
     private static File dumpLineNumbersTo;
 
+    private ConcurrentMap<String, CacheEntry<GroovyPageMetaInfo>> pageCache = new ConcurrentHashMap<String, CacheEntry<GroovyPageMetaInfo>>();
     private ClassLoader classLoader;
     private AtomicInteger scriptNameCount=new AtomicInteger(0);
 
 
     private GroovyPageLocator groovyPageLocator;
-
-
     private TagLibraryLookup tagLibraryLookup;
     private TagLibraryResolver jspTagLibraryResolver;
-    private boolean cacheResources = true;
 
 
 
+    @Autowired(required = false)
+    private OutputContextLookup outputContextLookup;
+
+    @Autowired(required = false)
     private List<GroovyPageSourceDecorator> groovyPageSourceDecorators = new ArrayList();
-    private GspConfiguration configuration;
+
+    private boolean reloadEnabled;
+    private boolean developmentMode;
+    private boolean sitemeshPreprocessEnabled;
+    private boolean cacheResources;
+    private String encoding;
+    private String keepGeneratedFilesDirectoryPath;
+    private OutputEncodingSettings outputEncodingSettings;
+    private ResourceLoader resourceLoader;
+    private File keepGeneratedDirectory;
+
+
+
+
+
+    private ApplicationContext applicationContext;
 
     static {
         String dirPath = System.getProperty("gsp.line.numbers.to.dir");
@@ -101,13 +135,6 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
     }
 
 
-    public GroovyPagesTemplateEngine(GspConfiguration configuration, GroovyPageLocator pageLocator) {
-        Assert.notNull(configuration);
-        Assert.notNull(pageLocator);
-        this.groovyPageLocator = pageLocator;
-        this.configuration = configuration;
-    }
-
 
     public void setGroovyPageSourceDecorators(List<GroovyPageSourceDecorator> groovyPageSourceDecorators){
     	this.groovyPageSourceDecorators = groovyPageSourceDecorators;
@@ -118,7 +145,6 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
     }
 
     public void setGroovyPageLocator(GroovyPageLocator groovyPageLocator) {
-        Assert.notNull(groovyPageLocator,"groovyPageLocator must not be null.");
         this.groovyPageLocator = groovyPageLocator;
     }
 
@@ -127,8 +153,9 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
     }
 
     public void setResourceLoader(ResourceLoader resourceLoader) {
-        Assert.notNull(groovyPageLocator,"resourceLoader must not be null.");
+        Assert.notNull(groovyPageLocator,"groovyPageLocator must not be null.");
         groovyPageLocator.addResourceLoader(resourceLoader);
+        this.resourceLoader = resourceLoader;
     }
 
     public void afterPropertiesSet() {
@@ -136,6 +163,22 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
             classLoader = initGroovyClassLoader(Thread.currentThread().getContextClassLoader());
         }else if (!classLoader.getClass().equals(GroovyPageClassLoader.class)) {
             classLoader = initGroovyClassLoader(classLoader);
+        }
+
+        if (outputContextLookup == null)
+            outputContextLookup = OutputContextLookupHelper.getOutputContextLookup();
+
+        if (keepGeneratedDirectory == null && resourceLoader != null && getKeepGeneratedFilesDirectoryPath() != null)
+        {
+            Resource resource = resourceLoader.getResource(getKeepGeneratedFilesDirectoryPath());
+            try
+            {
+                keepGeneratedDirectory =  resource.getFile();
+            } catch (IOException e)
+            {
+                LOG.warn("Could not get generated file directory from path: " + getKeepGeneratedFilesDirectoryPath() +
+                        ".Keep generated files will be disabled.Error message: "+e.getMessage(),e);
+            }
         }
     }
 
@@ -202,7 +245,7 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
      */
     @Override
     public Template createTemplate(Resource resource) {
-        return createTemplate(resource, cacheResources);
+        return createTemplate(resource, isCacheResources());
     }
 
     /**
@@ -232,8 +275,16 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
 
     protected Template createTemplate(Resource resource, final String pageName, final boolean cacheable) throws IOException
     {
-        GroovyPageMetaInfo meta = buildPageMetaInfo(resource, pageName);
+        GroovyPageMetaInfo meta;
+        if(cacheable) {
+            meta = CacheEntry.getValue(pageCache, pageName, -1, null,
+                    new GroovyPagesTemplateEngineCallable(new GroovyPagesTemplateEngineCacheEntry(pageName))
+                    , true, resource);
+        } else {
+            meta = buildPageMetaInfo(resource, pageName);
+        }
         return new GroovyPageTemplate(meta);
+
     }
 
     protected String establishPageName(Resource resource, final boolean cacheable) {
@@ -276,7 +327,8 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
                 metaInfo.setJspTagLibraryResolver(jspTagLibraryResolver);
                 metaInfo.setTagLibraryLookup(tagLibraryLookup);
                 metaInfo.initialize();
-                GroovyPagesMetaUtils.registerMethodMissingForGSP(metaInfo.getPageClass(), tagLibraryLookup, configuration.getEnvironment().isDevelopment());
+                GroovyPagesMetaUtils.registerMethodMissingForGSP(metaInfo.getPageClass(), tagLibraryLookup,
+                        isDevelopmentMode());
             }
         });
         return meta;
@@ -430,7 +482,7 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
      * @return true if it is
      */
     public boolean isReloadEnabled() {
-        return configuration.isReloadEnabled();
+        return reloadEnabled;
     }
 
     /**
@@ -470,8 +522,11 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
         GroovyPageParser parser;
         String path = getPathForResource(res);
         try {
-        	String gspSource = IOUtils.toString(inputStream, configuration.getDefaultEncoding());
-            parser = new GroovyPageParser(name, path, path, decorateGroovyPageSource(new StringBuilder(gspSource)).toString(), configuration);
+        	String gspSource = IOUtils.toString(inputStream, getEncoding());
+            gspSource = decorateGroovyPageSource(new StringBuilder(gspSource)).toString();
+            ParserOptions parserOptions = new ParserOptions(new ParseTarget(name,path,path), gspSource);
+            enhanceParserOptions(parserOptions);
+            parser = new GroovyPageParser(parserOptions);
         }
         catch (IOException e) {
             throw new GroovyPagesException("I/O parsing Groovy page ["+(res != null ? res.getDescription() : name)+"]: " + e.getMessage(),e);
@@ -491,6 +546,14 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
         }
 
         return metaInfo;
+    }
+
+    private void enhanceParserOptions(ParserOptions parserOptions)
+    {
+        parserOptions.setDevelopmentMode(isDevelopmentMode());
+        parserOptions.setSitemeshPreprocessEnabled(isSitemeshPreprocessEnabled());
+        parserOptions.setOutputEncodingSettings(getOutputEncodingSettings());
+        parserOptions.setKeepGeneratedFilesDirectory(this.keepGeneratedDirectory);
     }
 
     private String getPathForResource(Resource res) {
@@ -549,7 +612,7 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
             String relativePageName = DefaultErrorsPrinter.makeRelativeIfPossible(pageName);
             throw new GroovyPagesException("IO exception parsing script ["+ relativePageName + "]: " + e.getMessage(), e);
         }
-        GroovyPagesMetaUtils.registerMethodMissingForGSP(scriptClass, tagLibraryLookup, configuration.getEnvironment().isDevelopment());
+        GroovyPagesMetaUtils.registerMethodMissingForGSP(scriptClass, tagLibraryLookup, isDevelopmentMode());
 
         return scriptClass;
     }
@@ -581,10 +644,11 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
         pageMeta.setExpressionCodecName(parse.getExpressionCodecDirectiveValue());
         pageMeta.setOutCodecName(parse.getOutCodecDirectiveValue());
         pageMeta.setTaglibCodecName(parse.getTaglibCodecDirectiveValue());
+        pageMeta.setApplicationContext(applicationContext);
 
         pageMeta.initialize();
         // just return groovy and don't compile if asked
-        if (configuration.getEnvironment().isDevelopment()) {
+        if (isDevelopmentMode()) {
             pageMeta.setGroovySource(in);
         }
 
@@ -673,12 +737,19 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
         return buf.toString();
     }
 
-    public boolean isCacheResources() {
-        return cacheResources;
-    }
 
-    public void setCacheResources(boolean cacheResources) {
-        this.cacheResources = cacheResources;
+    /**
+     * Clears the page cache. Views will be re-compiled.
+     */
+    public void clearPageCache() {
+        for(Iterator<Map.Entry<String, CacheEntry<GroovyPageMetaInfo>>> it = pageCache.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, CacheEntry<GroovyPageMetaInfo>> entry = it.next();
+            GroovyPageMetaInfo metaInfo = entry.getValue().getValue();
+            if(metaInfo != null) {
+                metaInfo.removePageMetaClass();
+            }
+            it.remove();
+        }
     }
 
 
@@ -694,4 +765,141 @@ public class GroovyPagesTemplateEngine extends ResourceAwareTemplateEngine imple
         }
     }
 
+    public OutputEncodingSettings getOutputEncodingSettings()
+    {
+
+        return outputEncodingSettings;
+    }
+
+    public void setOutputEncodingSettings(OutputEncodingSettings outputEncodingSettings)
+    {
+        this.outputEncodingSettings = outputEncodingSettings;
+    }
+
+
+
+    private static class GroovyPagesTemplateEngineCallable implements Callable<CacheEntry<GroovyPageMetaInfo>>
+    {
+
+        private final CacheEntry<GroovyPageMetaInfo> cacheEntry;
+
+        public GroovyPagesTemplateEngineCallable(CacheEntry<GroovyPageMetaInfo> cacheEntry){
+            this.cacheEntry = cacheEntry;
+        }
+
+        @Override
+        public CacheEntry<GroovyPageMetaInfo> call() throws Exception {
+            return cacheEntry;
+        }
+
+    }
+
+    private class GroovyPagesTemplateEngineCacheEntry extends CacheEntry<GroovyPageMetaInfo>
+    {
+        private final String pageName;
+
+        public GroovyPagesTemplateEngineCacheEntry(String pageName)
+        {
+            this.pageName = pageName;
+        }
+
+        @Override
+        protected boolean hasExpired(long timeout, Object cacheRequestObject)
+        {
+            GroovyPageMetaInfo meta = getValue();
+            Resource resource = (Resource) cacheRequestObject;
+            return meta == null || isGroovyPageReloadable(resource, meta);
+        }
+
+        @Override
+        protected GroovyPageMetaInfo updateValue(GroovyPageMetaInfo oldValue, Callable<GroovyPageMetaInfo> updater, Object cacheRequestObject)
+                throws Exception
+        {
+            if (oldValue != null)
+            {
+                oldValue.removePageMetaClass();
+            }
+            Resource resource = (Resource) cacheRequestObject;
+            return buildPageMetaInfo(resource, pageName);
+        }
+    }
+
+
+    public void setReloadEnabled(boolean reloadEnabled)
+    {
+        this.reloadEnabled = reloadEnabled;
+    }
+
+    public boolean isDevelopmentMode()
+    {
+        return developmentMode;
+    }
+
+    public void setDevelopmentMode(boolean developmentMode)
+    {
+        this.developmentMode = developmentMode;
+    }
+
+    public ApplicationContext getApplicationContext()
+    {
+        return applicationContext;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext)
+    {
+        this.applicationContext = applicationContext;
+        if (this.resourceLoader == null)
+            this.resourceLoader = applicationContext;
+    }
+
+    public boolean isSitemeshPreprocessEnabled()
+    {
+        return sitemeshPreprocessEnabled;
+    }
+
+    public void setSitemeshPreprocessEnabled(boolean sitemeshPreprocessEnabled)
+    {
+        this.sitemeshPreprocessEnabled = sitemeshPreprocessEnabled;
+    }
+
+    public boolean isCacheResources()
+    {
+        return cacheResources;
+    }
+
+    public void setCacheResources(boolean cacheResources)
+    {
+        this.cacheResources = cacheResources;
+    }
+
+    public String getEncoding()
+    {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding)
+    {
+        this.encoding = encoding;
+    }
+
+    public String getKeepGeneratedFilesDirectoryPath()
+    {
+        return keepGeneratedFilesDirectoryPath;
+    }
+
+    public void setKeepGeneratedFilesDirectoryPath(String keepGeneratedFilesDirectoryPath)
+    {
+        this.keepGeneratedFilesDirectoryPath = keepGeneratedFilesDirectoryPath;
+    }
+
+    public File getKeepGeneratedDirectory()
+    {
+        return keepGeneratedDirectory;
+    }
+
+    public void setKeepGeneratedDirectory(File keepGeneratedDirectory)
+    {
+        this.keepGeneratedDirectory = keepGeneratedDirectory;
+    }
 }

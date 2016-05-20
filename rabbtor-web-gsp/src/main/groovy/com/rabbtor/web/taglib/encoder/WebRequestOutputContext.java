@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2005 Graeme Rocher
+ * Copyright 2015 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.rabbtor.taglib;
+
+package com.rabbtor.web.taglib.encoder;
 
 
-import org.grails.buffer.FastStringWriter;
+import com.rabbtor.web.servlet.mvc.RabbtorWebRequest;
 
-/**
- * A temporary writer used by GSP to write to a StringWriter and later retrieve the value.
- * It also converts nulls into blank strings.
- *
- * @author Graeme Rocher
- * @since 0.5
- */
-public class GroovyPageTagWriter extends FastStringWriter
-{
 
-    private static final int DEFAULT_CHUNK_SIZE = Integer.getInteger("groovypagetagwriter.chunksize", 512);
+public class WebRequestOutputContext extends WebOutputContextLookup.WebOutputContext {
+    private final RabbtorWebRequest webRequest;
 
-    public GroovyPageTagWriter() {
-        super(DEFAULT_CHUNK_SIZE);
+    public static final String PAGE_SCOPE="com.rabbtor.PAGE_SCOPE";
+
+    public WebRequestOutputContext(RabbtorWebRequest webRequest) {
+        this.webRequest = webRequest;
     }
 
+    protected RabbtorWebRequest lookupWebRequest() {
+        return webRequest;
+    }
 }

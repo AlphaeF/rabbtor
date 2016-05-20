@@ -1,10 +1,11 @@
 package com.rabbtor.gsp
 
+import com.rabbtor.gsp.io.DefaultGroovyPageLocator
+import com.rabbtor.gsp.io.GroovyPageLocator
 import com.rabbtor.taglib.TagLibraryLookup
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.SpringApplicationConfiguration
-import org.springframework.boot.test.WebIntegrationTest
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -48,10 +49,7 @@ class GspTemplateEngineSpec extends Specification
         output != null
         output.contains('foo')
         output.contains('bar')
-        output.contains(2*2)
-
-
-
+        output.contains((2*2).toString())
 
 
     }
@@ -61,16 +59,33 @@ class GspTemplateEngineSpec extends Specification
     @Configuration
     static class GspApplication
     {
+        private GspConfiguration gspSettings;
+
         @Autowired
         Environment environment
 
         @Bean
         GroovyPagesTemplateEngine templateEngine()
         {
-            def engine = new GroovyPagesTemplateEngine(environment)
-            engine.tagLibraryLookup = tagLibraryLookup()
+            def engine = new GroovyPagesTemplateEngine()
+            engine.groovyPageLocator = groovyPageLocator()
             engine
         }
+
+        @Bean
+        GroovyPageLocator groovyPageLocator() {
+            return new DefaultGroovyPageLocator(new GspConfiguration())
+        }
+
+        private GspConfiguration getGspSettings() {
+            if (gspSettings == null)
+            {
+                gspSettings = new GspConfiguration()
+            }
+            return gspSettings;
+        }
+
+
 
         @Bean
         TagLibraryLookup tagLibraryLookup()

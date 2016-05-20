@@ -37,7 +37,8 @@ import java.util.Map;
  *
  * @author Graeme Rocher
  */
-public abstract class GroovySyntaxTag implements GrailsTag {
+public abstract class GroovySyntaxTag implements GspTag
+{
 
     private static final String ERROR_NO_VAR_WITH_STATUS = "When using <g:each> with a [status] attribute, you must also define a [var]. eg. <g:each var=\"myVar\">";
     protected static final String ATTRIBUTE_IN = "in";

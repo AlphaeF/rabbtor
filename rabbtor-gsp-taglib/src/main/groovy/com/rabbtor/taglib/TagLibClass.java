@@ -15,6 +15,8 @@
  */
 package com.rabbtor.taglib;
 
+import groovy.lang.GroovyObject;
+
 import java.util.Set;
 
 /**
@@ -22,9 +24,11 @@ import java.util.Set;
  *
  * @author Graeme Rocher
  */
-public interface TagLibDescriptor {
+public interface TagLibClass
+{
 
     String DEFAULT_NAMESPACE = "g";
+    String TAGLIB_BEAN_NAME_SUFFIX = "GspTagLib";
 
     String NAMESPACE_FIELD_NAME = "namespace";
 
@@ -53,5 +57,5 @@ public interface TagLibDescriptor {
     Object getEncodeAsForTag(String tagName);
     Object getDefaultEncodeAs();
 
-    Tag getTag(String tagName);
+    String getBeanName();
 }

@@ -24,7 +24,8 @@ import java.util.Map;
  *
  * @author Graeme Rocher
  */
-public interface GrailsTag {
+public interface GspTag
+{
 
     @SuppressWarnings("rawtypes")
     void init(Map tagContext);
