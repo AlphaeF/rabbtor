@@ -8,11 +8,11 @@ spring {
     thymeleaf {
         cache= false
         prefix= '/WEB-INF/thymeleaf/'
-        enabled= true
+        enabled= false
         suffix= '.html'
     }
     freemarker {
-        enabled = true
+        enabled = false
         cache = false
         prefix= ''
         suffix = '.ftl'
@@ -22,7 +22,7 @@ spring {
         }
     }
     gsp {
-        templateRoots = ['/']
+        templateRoots = ['/WEB-INF/gsp/']
     }
     mvc {
         view {

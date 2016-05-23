@@ -5,8 +5,6 @@ buildscript {
     }
 
     repositories {
-        // maven { url "https://repo.rabbyte.com/rabbtor/core" }
-        // maven { url "https://repo.grails.org/grails/core" }
         jcenter()
         maven { url 'http://dl.bintray.com/vermeulen-mp/gradle-plugins' }
     }
@@ -19,7 +17,6 @@ buildscript {
         classpath 'net.gvmtool:gradle-sdkvendor-plugin:0.3.1'
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
         classpath "org.springframework:springloaded:$springLoadedVersion"
-
     }
 }
 
@@ -29,7 +26,7 @@ ext {
     bintrayPublish = false
     // Sets release version
     rabbtorVersion = '1.0.0.BUILD-SNAPSHOT'
-    grailsVersion = '3.1.4'
+    grailsVersion = '3.2.0.BUILD-SNAPSHOT'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 
@@ -134,6 +131,8 @@ subprojects { project ->
     targetCompatibility = "1.8"
 
     repositories {
+        maven { url  "http://rabbytes.bintray.com/grails-core" }
+        maven { url  "http://repo.grails.org/grails/grails-core" }
         mavenLocal()
         jcenter()
     }
@@ -142,6 +141,7 @@ subprojects { project ->
         groovyOptions.fork(jvmArgs: ['-XX:MaxPermSize=512m'], memoryInitialSize: '128M', memoryMaximumSize: '1G')
         groovyOptions.encoding = "UTF-8"
         options.encoding = "UTF-8"
+        options.failOnError = false
     }
 
     configure([compileJava, compileTestJava]) {
@@ -154,7 +154,9 @@ subprojects { project ->
 
         compileOnly "javax.validation:validation-api:${validationApiVersion}"
         compileOnly "org.springframework:spring-webmvc:${springVersion}"
-        compileOnly "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}"
+        compileOnly "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}", {
+            exclude group: 'org.codehaus.groovy', module: 'groovy'
+        }
 
 
 

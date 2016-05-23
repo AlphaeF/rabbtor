@@ -1,12 +1,4 @@
 
-ext {
-    grailsVersion="3.1.6"
-    groovyVersion="2.4.6"
-}
-
-
 dependencies {
-    compile (project(':rabbtor-gsp-taglib'))
-    compile ("org.codehaus.groovy:groovy-templates:${groovyVersion}")
-
+    compileOnly ("org.grails:grails-gsp:${grailsVersion}")
 }

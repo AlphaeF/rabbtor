@@ -1,6 +1,0 @@
-
-dependencies {
-    compileOnly (project(":rabbtor-web"))
-    compileOnly ("org.thymeleaf:thymeleaf:${thymeleafVersion}")
-    compileOnly ("org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}")
-}

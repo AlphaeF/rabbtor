@@ -1,8 +1,0 @@
-ext {
-    grailsVersion="3.1.6"
-}
-
-
-dependencies {
-    compile (project(':rabbtor-encoder'))
-}

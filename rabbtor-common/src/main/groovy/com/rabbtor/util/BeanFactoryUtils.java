@@ -2,8 +2,8 @@ package com.rabbtor.util;
 
 
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.context.ApplicationContext;
 
 import java.util.Optional;
 
@@ -30,4 +30,5 @@ public class BeanFactoryUtils
             return Optional.of(beanFactory.getBean(beanName));
         return Optional.empty();
     }
+
 }
