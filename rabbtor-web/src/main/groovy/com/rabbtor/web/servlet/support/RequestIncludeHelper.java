@@ -73,12 +73,12 @@ public class RequestIncludeHelper
         this.params = params;
     }
 
-    public String include(String path, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    public IncludeResult include(String path, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
         RequestIncludeWrapper wrappedRequest = new RequestIncludeWrapper(request,params.asRequestParameterMap(getConversionService()),includeRequestParams);
         ResponseIncludeWrapper wrappedResponse = new ResponseIncludeWrapper(response);
         include(path,wrappedRequest,wrappedResponse);
-        return wrappedResponse.getContent();
+        return new DefaultIncludeResult(wrappedResponse);
     }
 
     public void include(String path, RequestIncludeWrapper wrappedRequest, ResponseIncludeWrapper wrappedResponse) throws ServletException, IOException

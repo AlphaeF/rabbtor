@@ -123,12 +123,13 @@ public class RequestParams
 
     public Map<String, String[]> asRequestParameterMap()
     {
-        return asRequestParameterMap(new DefaultConversionService());
+        return asRequestParameterMap((ConversionService)null);
     }
 
     public Map<String, String[]> asRequestParameterMap(ConversionService conversionService)
     {
-        return asRequestParameterMap(o -> conversionService.convert(o, String.class));
+        final ConversionService converter = conversionService == null ? new DefaultConversionService() : conversionService;
+        return asRequestParameterMap(o -> converter.convert(o, String.class));
     }
 
 

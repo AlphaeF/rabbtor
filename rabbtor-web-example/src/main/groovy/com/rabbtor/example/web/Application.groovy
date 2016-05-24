@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfigurati
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = ThymeleafAutoConfiguration)
-@EnableWebGsp
+@EnableWebGsp()
 class Application
 {
     public static void main(String[] args) {

@@ -12,13 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Configuration
 public class GspConfiguration extends GrailsApplicationConfigurationSupport
@@ -50,7 +48,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
         @Value("${spring.gsp.layout.caching:true}")
         boolean gspLayoutCaching;
 
-        @Value("${spring.gsp.layout.default:main}")
+        @Value("${spring.gsp.layout.default:#{null}")
         String defaultLayoutName;
 
     }
@@ -106,7 +104,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
     }
 
     protected List<String> resolveTemplateRoots() {
-        List<String> templateRoots = new ArrayList<>();
+        List<String> templateRoots = new ArrayList();
         if (templateEngineConfig.templateRoots != null)
             templateRoots.addAll(Arrays.asList(templateEngineConfig.templateRoots));
 
@@ -141,5 +139,16 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
     {
     }
 
-
+    @Override
+    protected void registerGrailsProperties(Set<String> grailsProperties)
+    {
+        grailsProperties.addAll(Arrays.asList(new String[] {
+                "grails.views.default.codec",
+                "grails.views.gsp.codecs",
+                "grails.views.gsp.encoding",
+                "grails.views.gsp.keepgenerateddir",
+                "grails.views.gsp.sitemesh.preprocess",
+                "grails.views.gsp.codecs"
+        }));
+    }
 }

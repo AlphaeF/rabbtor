@@ -1,4 +1,8 @@
 
 dependencies {
-    compileOnly ("org.grails:grails-gsp:${grailsVersion}")
+    compile ("org.grails:grails-gsp:${grailsVersion}") {
+        exclude group:'org.springframework'
+    }
+
+    compileOnly ("org.fusesource.jansi:jansi:$jansiVersion")
 }

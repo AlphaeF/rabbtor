@@ -80,8 +80,11 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
 
     protected long lastModified = -1;
     private String contentType;
-
-
+    private int status;
+    private String statusMessage;
+    private boolean committed;
+    private String redirectUrl;
+    private boolean error;
 
 
     private final HttpServletResponse responseDelegate;
@@ -93,6 +96,9 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
         RFC1123_FORMAT = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
         RFC1123_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
+
+
+
 
     public ResponseIncludeWrapper(HttpServletResponse response)
     {
@@ -126,9 +132,6 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
      */
     @Override
     public String getContentType() {
-        if (contentType == null) {
-            setContentType(_getResponse().getContentType());
-        }
         return contentType;
     }
 
@@ -251,7 +254,10 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void sendRedirect(String location) throws IOException
     {
-        _getResponse().sendRedirect(location);
+        committed = true;
+        redirectUrl = location;
+        flushBuffer();
+
     }
 
 
@@ -271,8 +277,9 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void sendError(int sc) throws IOException
     {
-        _getResponse().sendError(sc);
-        resetBuffer();
+        setStatus(sc);
+        error = true;
+        flushBuffer();
     }
 
     /**
@@ -284,8 +291,10 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void sendError(int sc, String msg) throws IOException
     {
-        _getResponse().sendError(sc, msg);
-        resetBuffer();
+        setStatus(sc);
+        error = true;
+        statusMessage = msg;
+        flushBuffer();
     }
 
     /**
@@ -295,7 +304,7 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void setStatus(int status)
     {
-        _getResponse().setStatus(status);
+        this.status = status;
     }
 
 
@@ -312,6 +321,7 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void reset()
     {
+
         resetBuffer();
     }
 
@@ -393,7 +403,7 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
 
     /**
      * For <code>content-type</code> and <code>last-modified</code> headers,it stores the local values
-     * on this instance. For other headers, header is added to the wrapped response.
+     * on this instance. For other headers, delegated to the wrapped response.
      * @param name
      * @param value
      */
@@ -415,9 +425,10 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
             }
         } else if (lname.equals(CONTENT_TYPE))
         {
-            contentType = value;
+            setContentType(value);
+
         } else {
-            _getResponse().addHeader(name,value);
+            super.addHeader(name,value);
         }
     }
 
@@ -439,7 +450,7 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
 
     /**
      * For <code>content-type</code> and <code>last-modified</code> headers,it sets the local values
-     * on this instance. For other headers, header is set on the wrapped response.
+     * on this instance. For other headers, delegated to the wrapped response.
      * @param name
      * @param value
      */
@@ -461,9 +472,9 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
             }
         } else if (lname.equals(CONTENT_TYPE))
         {
-            contentType = value;
+            setContentType(value);
         } else {
-            _getResponse().setHeader(name,value);
+            super.setHeader(name,value);
         }
     }
 
@@ -486,15 +497,35 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
     @Override
     public void addIntHeader(String name, int value)
     {
-        _getResponse().addIntHeader(name,value);
+        super.addIntHeader(name,value);
     }
 
     /**
-     * @return commit status of the wrapped response.
+     * @return commit status.This is not delegated to the wrapped response.
      */
     @Override
     public boolean isCommitted()
     {
-        return _getResponse().isCommitted();
+        return committed;
+    }
+
+    @Override
+    public int getStatus()
+    {
+        return status;
+    }
+
+    public String getStatusMessage()
+    {
+        return statusMessage;
+    }
+
+    public String getRedirectUrl()
+    {
+        return redirectUrl;
+    }
+
+    public boolean hasError() {
+        return error;
     }
 }

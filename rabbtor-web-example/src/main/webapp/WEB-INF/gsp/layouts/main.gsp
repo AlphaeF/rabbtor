@@ -1,9 +1,11 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
     <body>
-        Main layout
-
-        <g:set var="name" value="test" scope="request"></g:set>
-        ${name}
+        <h1>Main Layout</h1>
         <g:layoutBody/>
+
+        <g:ifPageProperty name="page.footScripts" >
+            <g:pageProperty name="page.footScripts" />
+        </g:ifPageProperty>
     </body>
 </html>

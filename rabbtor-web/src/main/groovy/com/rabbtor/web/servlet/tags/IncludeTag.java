@@ -17,6 +17,7 @@
 package com.rabbtor.web.servlet.tags;
 
 
+import com.rabbtor.web.servlet.support.IncludeResult;
 import com.rabbtor.web.servlet.support.RequestIncludeHelper;
 import org.springframework.util.Assert;
 import org.springframework.web.servlet.tags.HtmlEscapingAwareTag;
@@ -120,8 +121,12 @@ public class IncludeTag extends HtmlEscapingAwareTag implements ParamAware
             if (includeRequestParams != null)
                 this.includeHelper.setIncludeRequestParams(includeRequestParams);
 
-            String content = includeHelper.include(path,request,response);
-            pageContext.getOut().print(htmlEscape(content));
+            IncludeResult content = includeHelper.include(path,request,response);
+            if (content.getRedirectUrl() != null)
+                response.sendRedirect(content.getRedirectUrl());
+            else if (!content.isError())
+                pageContext.getOut().print(htmlEscape(content.getContentOrEmpty()));
+
         } catch (ServletException e)
         {
             throw new JspException(e);

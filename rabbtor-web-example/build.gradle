@@ -31,6 +31,7 @@ ext {
 }
 
 ext['spring.version'] = '4.2.6.RELEASE'
+ext['groovy.version'] = ext.groovyVersion
 
 apply plugin: 'idea'
 apply plugin: 'groovy'

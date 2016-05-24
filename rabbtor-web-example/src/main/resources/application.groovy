@@ -32,19 +32,36 @@ spring {
     }
 }
 
+grails {
+    views {
+        gsp {
+            sitemesh {
+                preprocess = false
+            }
+        }
+    }
+}
+
 environments {
 
     prod {
-        reload = false
-        cache = true
+        spring {
+            gsp {
+                reloadingEnabled = false
+                layout {
+                    caching = false
+                }
+            }
+        }
     }
 
     dev {
         spring {
             gsp {
-                reload = true
-                devmode = true
-                cache = false
+                reloadingEnabled = true
+                layout {
+                    caching = false
+                }
             }
         }
     }

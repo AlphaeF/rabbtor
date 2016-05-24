@@ -77,6 +77,7 @@ ext {
 
 // Spring boot configuration
 ext['spring.version'] = ext.springVersion
+ext['groovy.version'] = ext.groovyVersion
 
 
 version = rabbtorVersion
@@ -110,7 +111,9 @@ subprojects { project ->
     group = "com.rabbtor"
     ext.isTestSuite = project.name.startsWith("rabbtor-test-suite")
 
-    if (project.name  == 'rabbtor-web-example') return
+    if (project.name  == 'rabbtor-web-example' ||
+        project.name == 'rabbtory-dummy')
+        return
 
 
     apply plugin: 'groovy'
@@ -141,7 +144,6 @@ subprojects { project ->
         groovyOptions.fork(jvmArgs: ['-XX:MaxPermSize=512m'], memoryInitialSize: '128M', memoryMaximumSize: '1G')
         groovyOptions.encoding = "UTF-8"
         options.encoding = "UTF-8"
-        options.failOnError = false
     }
 
     configure([compileJava, compileTestJava]) {
@@ -153,7 +155,9 @@ subprojects { project ->
         compile groovyDependency
 
         compileOnly "javax.validation:validation-api:${validationApiVersion}"
-        compileOnly "org.springframework:spring-webmvc:${springVersion}"
+        compileOnly "org.springframework:spring-webmvc:${springVersion}", {
+            exclude group: 'org.codehaus.groovy', module: 'groovy'
+        }
         compileOnly "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}", {
             exclude group: 'org.codehaus.groovy', module: 'groovy'
         }
@@ -171,6 +175,7 @@ subprojects { project ->
                 compileOnly "javax.servlet:javax.servlet-api:$servletApiVersion"
                 // MockHttpServletRequest/Response/Context used in many classes
                 compileOnly ("org.springframework:spring-test:${springVersion}") {
+                    exclude group: 'org.codehaus.groovy', module: 'groovy'
                 }
             }
         }
@@ -191,7 +196,9 @@ subprojects { project ->
 
             testCompile "javax.validation:validation-api:${validationApiVersion}"
             testCompile ("org.springframework.boot:spring-boot:${springBootVersion}")
-            testCompile ("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
+            testCompile ("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}") {
+                exclude group: 'org.codehaus.groovy', module: 'groovy'
+            }
             testCompile ("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
             testCompile ("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
             testCompile ("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {

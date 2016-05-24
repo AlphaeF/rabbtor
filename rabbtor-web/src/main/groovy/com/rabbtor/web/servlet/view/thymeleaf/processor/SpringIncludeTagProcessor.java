@@ -1,6 +1,7 @@
 package com.rabbtor.web.servlet.view.thymeleaf.processor;
 
 
+import com.rabbtor.web.servlet.support.IncludeResult;
 import com.rabbtor.web.servlet.support.RequestIncludeHelper;
 import com.rabbtor.web.servlet.support.RequestParams;
 import com.rabbtor.web.servlet.view.thymeleaf.RabbtorDialect;
@@ -45,19 +46,18 @@ public class SpringIncludeTagProcessor extends AbstractStandardExpressionAttribu
     }
 
 
-
     @Override
     protected void doProcess(ITemplateContext context, IProcessableElementTag tag, AttributeName attributeName, String attributeValue, Object expressionResult, IElementTagStructureHandler structureHandler)
     {
-        final String paramsAttr = tag.getAttributeValue(dialectPrefix,PARAMS_ATTR_NAME);
-        Assert.isTrue(context instanceof IWebContext,"templateContext must be a IWebContext.");
+        final String paramsAttr = tag.getAttributeValue(dialectPrefix, PARAMS_ATTR_NAME);
+        Assert.isTrue(context instanceof IWebContext, "templateContext must be a IWebContext.");
 
         RequestParams params = new RequestParams();
 
         if (paramsAttr != null)
         {
             final IStandardExpression paramsExpression = StandardExpressions.getExpressionParser(context.getConfiguration())
-                    .parseExpression(context,paramsAttr);
+                    .parseExpression(context, paramsAttr);
             Object paramsValue = paramsExpression.execute(context);
 
             if (paramsValue instanceof RequestParams)
@@ -86,15 +86,23 @@ public class SpringIncludeTagProcessor extends AbstractStandardExpressionAttribu
         HttpServletResponse response = webContext.getResponse();
 
         ApplicationContext appContext = SpringUtils.getApplicationContext(context);
-        if (appContext != null) {
+        if (appContext != null)
+        {
             includeHelper.setConversionService(appContext.getBean(ConversionService.class));
         }
 
 
         try
         {
-            String content = includeHelper.include(path,request,response);
-            structureHandler.replaceWith(content,false);
+            IncludeResult content = includeHelper.include(path, request, response);
+            String output = "";
+            if (content.getRedirectUrl() != null)
+            {
+                response.sendRedirect(content.getRedirectUrl());
+            } else if (!content.isError())
+                output = content.getContentOrEmpty();
+
+            structureHandler.replaceWith(output, false);
 
         } catch (ServletException e)
         {

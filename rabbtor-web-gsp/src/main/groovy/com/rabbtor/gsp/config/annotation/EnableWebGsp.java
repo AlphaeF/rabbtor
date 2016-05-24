@@ -10,5 +10,6 @@ import java.lang.annotation.*;
 @Import({WebGspConfiguration.class,WebTagLibraryLookupRegistrar.class})
 public @interface EnableWebGsp
 {
+    TagLibScan tagLibScan() default @TagLibScan;
     Class<?>[] tagLibClasses() default {};
 }

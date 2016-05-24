@@ -8,4 +8,5 @@ include 'rabbtor-gsp'
 include 'rabbtor-encoder'
 include 'rabbtor-grails'
 include 'rabbtor-web-gsp'
+include 'rabbtor-dummy'
 
