@@ -10,7 +10,5 @@ import java.lang.annotation.*;
 @Import({GspConfiguration.class,TagLibraryLookupRegistrar.class})
 public @interface EnableGsp
 {
-    TagLibScan tagLibScan() default @TagLibScan;
     Class<?>[] tagLibClasses() default {};
-
 }

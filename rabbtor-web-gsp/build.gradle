@@ -1,10 +1,18 @@
 
 
 dependencies {
-    compile (project(':rabbtor-web'))
-    compile (project(':rabbtor-gsp'))
+
     compile ("org.grails:grails-web-gsp-taglib:${grailsVersion}") {
         exclude group:'org.springframework'
+        exclude group:'org.slf4j'
+        exclude group:'xalan'
+        exclude group:'org.hibernate.javax.persistence'
+        exclude group:'org.codehaus.groovy',module:'groovy'
+        exclude group:'org.springframework.boot'
+
     }
+    compile (project(':rabbtor-web'))
+    compile (project(':rabbtor-gsp'))
+
 
 }

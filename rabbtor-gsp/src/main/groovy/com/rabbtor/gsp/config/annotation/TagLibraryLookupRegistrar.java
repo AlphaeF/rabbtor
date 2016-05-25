@@ -1,7 +1,5 @@
 package com.rabbtor.gsp.config.annotation;
 
-import grails.gsp.TagLib;
-import grails.gsp.taglib.AnnotationScanTagLibraryLookup;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -12,7 +10,6 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -22,7 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
+public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
 {
 
     public static final String GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME = "gspTagLibraryLookup";
@@ -47,18 +44,27 @@ public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
             list.add(createBeanDefinition(tagLibClass));
         }
 
-        ClassPathScanningCandidateComponentProvider componentProvider = createComponentProvider();
-        for (String packageToScan : packagesToScan) {
-            scanPackage(componentProvider, packageToScan, list);
-        }
-
-
-
+        scanPackages(importingClassMetadata,registry,packagesToScan,list);
 
         if (!registry.containsBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME)) {
             registerBean(registry,list);
         }
 
+    }
+
+    protected void scanPackages(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, Set<String> packagesToScan, ManagedList<GenericBeanDefinition> list)
+    {
+        if (packagesToScan.size() > 0)
+        {
+            ClassPathScanningCandidateComponentProvider componentProvider = createComponentProvider();
+            if (componentProvider != null)
+            {
+                for (String packageToScan : packagesToScan)
+                {
+                    scanPackage(componentProvider, packageToScan, list);
+                }
+            }
+        }
     }
 
     private void registerBean(BeanDefinitionRegistry registry, ManagedList<GenericBeanDefinition> list)
@@ -96,11 +102,8 @@ public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
         return createBeanDefinition(candidate.getBeanClass());
     }
 
-    private ClassPathScanningCandidateComponentProvider createComponentProvider() {
-        ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-                false);
-        componentProvider.addIncludeFilter(new AnnotationTypeFilter(TagLib.class));
-        return componentProvider;
+    protected ClassPathScanningCandidateComponentProvider createComponentProvider() {
+        return null;
     }
 
 
@@ -140,17 +143,7 @@ public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
         return packagesToScan;
     }
 
-    private Set<Class<?>> getTagLibClassesFromAnnotation(AnnotationMetadata metadata)
-    {
-        AnnotationAttributes attributes = AnnotationAttributes.fromMap(
-                metadata.getAnnotationAttributes(EnableGsp.class.getName()));
-        if (attributes != null)
-            return Arrays.asList(attributes.getClassArray("tagLibClasses"))
-                    .stream().collect(Collectors.toSet());
 
-        return Collections.emptySet();
-
-    }
 
 
 
@@ -172,7 +165,5 @@ public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
         return EnableGsp.class;
     }
 
-    public Class getLookupBeanClass() {
-        return AnnotationScanTagLibraryLookup.class;
-    }
+    public abstract Class getLookupBeanClass();
 }

@@ -26,7 +26,7 @@ ext {
     bintrayPublish = false
     // Sets release version
     rabbtorVersion = '1.0.0.BUILD-SNAPSHOT'
-    grailsVersion = '3.2.0.BUILD-SNAPSHOT'
+    grailsVersion = '3.1.7'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 

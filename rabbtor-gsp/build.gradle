@@ -1,7 +1,22 @@
 
 dependencies {
+
+    compile ("org.grails:grails-core:${grailsVersion}") {
+        exclude group:'org.springframework'
+        exclude group:'org.slf4j'
+        exclude group:'xalan'
+        exclude group:'org.hibernate.javax.persistence'
+        exclude group:'org.codehaus.groovy',module:'groovy'
+        exclude group:'org.springframework.boot'
+    }
+
     compile ("org.grails:grails-gsp:${grailsVersion}") {
         exclude group:'org.springframework'
+        exclude group:'org.slf4j'
+        exclude group:'xalan'
+        exclude group:'org.hibernate.javax.persistence'
+        exclude group:'org.codehaus.groovy',module:'groovy'
+        exclude group:'org.springframework.boot'
     }
 
     compileOnly ("org.fusesource.jansi:jansi:$jansiVersion")

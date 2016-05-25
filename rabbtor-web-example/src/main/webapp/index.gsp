@@ -1,6 +1,7 @@
 <%@ page contentType="text/html" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<html>
+<html xmlns:gsp="http://www.w3.org/1999/xhtml" xmlns:th="http://www.w3.org/1999/xhtml"
+      xmlns:g="http://www.w3.org/1999/xhtml">
     <body>
         Hi
         <p>Request: ${request}</p>
@@ -19,6 +20,8 @@
         <t:done/>
         <t:done/>
         <t:done/>
+
+        <div ></div>
 
         <p>
         <g:render template="/test" />

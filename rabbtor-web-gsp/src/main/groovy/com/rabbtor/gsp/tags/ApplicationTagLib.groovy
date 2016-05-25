@@ -161,7 +161,9 @@ class ApplicationTagLib implements
         def urivars = attrs.urivars ?: []
 
         def builder = MvcUriComponentsBuilder.fromMappingName(mapping)
-        args.eachWithIndex { def entry, int i -> builder.arg(i,entry) }
+        args.eachWithIndex { def entry, int i ->
+            builder.arg(i,entry)
+        }
         return builder.buildAndExpand(urivars as Object[])
     }
 

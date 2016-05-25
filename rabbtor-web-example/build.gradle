@@ -21,11 +21,10 @@ repositories {
 }
 
 ext {
-    groovyVersion = "2.4.4"
+    groovyVersion = "2.4.6"
     thymeleafVersion = "3.0.0.BETA03"
     tomcatVersion = "8.0.32"
     jstlVersion = "1.2"
-    gspVersion = "1.0.0"
     freemarkerVersion = '2.3.24-incubating'
 
 }
