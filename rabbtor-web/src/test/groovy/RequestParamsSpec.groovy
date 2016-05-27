@@ -61,7 +61,7 @@ class RequestParamsSpec extends Specification
         def params = new RequestParams();
         params.put(['id':20, names:['foo','bar'] as String[], date: new Date(), doubles: [1/3.0]])
         when:
-        def requestParams = params.toRequestParameterMap(null)
+        def requestParams = params.asRequestParameterMap()
         then:
         assert requestParams.size() == params.size();
 

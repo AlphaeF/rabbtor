@@ -5,14 +5,14 @@
 		version="2.0">
 
 	<description>Rabbtor Framework JSP Tag Library</description>
-	<tlib-version>4.0</tlib-version>
+	<tlib-version>1.0</tlib-version>
 	<short-name>rabbtor</short-name>
 	<uri>http://rabbtor.rabbytes.com/tags</uri>
 
 
 	<tag>
 		<name>include</name>
-		<tag-class>com.rabbtor.web.servlet.tags.IncludeTag</tag-class>
+		<tag-class>com.rabbtor.web.servlet.jsp.tags.IncludeTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
 			<description>Set path of the web resource to be included.</description>

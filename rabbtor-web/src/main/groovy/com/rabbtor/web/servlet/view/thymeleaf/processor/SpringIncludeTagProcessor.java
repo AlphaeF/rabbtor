@@ -2,6 +2,7 @@ package com.rabbtor.web.servlet.view.thymeleaf.processor;
 
 
 import com.rabbtor.web.servlet.support.IncludeResult;
+import com.rabbtor.web.servlet.support.IncludeStatusException;
 import com.rabbtor.web.servlet.support.RequestIncludeHelper;
 import com.rabbtor.web.servlet.support.RequestParams;
 import com.rabbtor.web.servlet.view.thymeleaf.RabbtorDialect;
@@ -13,6 +14,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.engine.*;
+import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.processor.element.IElementTagStructureHandler;
 import org.thymeleaf.standard.expression.IStandardExpression;
@@ -95,21 +97,17 @@ public class SpringIncludeTagProcessor extends AbstractStandardExpressionAttribu
         try
         {
             IncludeResult content = includeHelper.include(path, request, response);
-            String output = "";
             if (content.getRedirectUrl() != null)
             {
                 response.sendRedirect(content.getRedirectUrl());
-            } else if (!content.isError())
-                output = content.getContentOrEmpty();
+            } else if (content.isError())
+                throw new IncludeStatusException(content);
 
-            structureHandler.replaceWith(output, false);
+            structureHandler.replaceWith(content.getContent(), false);
 
-        } catch (ServletException e)
+        } catch (Exception e)
         {
-            throw new RuntimeException(e);
-        } catch (IOException e)
-        {
-            throw new RuntimeException(e);
+            throw new org.thymeleaf.exceptions.TemplateProcessingException(e.getMessage(),e);
         }
 
 

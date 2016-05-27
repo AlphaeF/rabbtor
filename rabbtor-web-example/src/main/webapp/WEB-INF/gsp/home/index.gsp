@@ -13,18 +13,26 @@
 
         <p>
             Mvc path:
-            <g:mvcPath mapping="HC#list" args="[20, ['test', 'buck&me']]" urivars="[15, 20]"/>
+            <g:mvcPath mapping="HC#list"  urivars="[15, 20]"/>
         </p>
 
         <p>
             Mvc Include:
 
-        <p>
-            <g:include mapping="HC#list" urivars="[15]" params="[id:10,names:['foo','bar']]" />
-        </p>
+        %{--<p>--}%
+            %{--<g:include mapping="HC#list" urivars="[15]" params="[id:10,names:['foo','bar']]" />--}%
+        %{--</p>--}%
 
         <my:testSet var="size" value="100" />
         ${size}
+
+            <g:elm tagName="div" id="100" name="test" class="{15}" >
+                <g:elm tagName="span" >Hi</g:elm>
+            </g:elm>
+
+            <g:formatDate date="${new Date()}" />
+
+            <g:message code="test.me" />
     </p>
 
 

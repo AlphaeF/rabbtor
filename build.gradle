@@ -154,13 +154,23 @@ subprojects { project ->
     dependencies {
         compile groovyDependency
 
-        compileOnly "javax.validation:validation-api:${validationApiVersion}"
-        compileOnly "org.springframework:spring-webmvc:${springVersion}", {
-            exclude group: 'org.codehaus.groovy', module: 'groovy'
+        provided("org.springframework:spring-core:${springVersion}") {
+            exclude group: 'commons-logging', module:'commons-logging'
         }
-        compileOnly "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}", {
-            exclude group: 'org.codehaus.groovy', module: 'groovy'
+        provided("org.springframework:spring-beans:${springVersion}") {
+            exclude group: 'commons-logging', module:'commons-logging'
         }
+        provided("org.springframework:spring-context:${springVersion}") {
+            exclude group: 'commons-logging', module:'commons-logging'
+        }
+
+
+
+
+        compileOnly "org.apache.ant:ant:${antVersion}"
+        compileOnly "org.codehaus.groovy:groovy-ant:$groovyVersion"
+        compileOnly "jline:jline:$jlineVersion"
+        compileOnly "org.fusesource.jansi:jansi:$jansiVersion"
 
 
 

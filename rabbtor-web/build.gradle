@@ -1,8 +1,18 @@
 
 dependencies {
-    compile (project(':rabbtor-core'))
+
+    provided("org.springframework:spring-webmvc:${springVersion}") {
+        exclude group: 'commons-logging', module:'commons-logging'
+    }
+
+
     compileOnly ("javax.servlet.jsp:javax.servlet.jsp-api:${jspVersion}")
+    compileOnly ("javax.el:javax.el-api:${jspVersion}")
     compileOnly ("org.thymeleaf:thymeleaf:${thymeleafVersion}")
     compileOnly ("org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}")
     compileOnly ("org.freemarker:freemarker:${freemarkerVersion}")
+
+    compile (project(':rabbtor-core'))
+
+
 }

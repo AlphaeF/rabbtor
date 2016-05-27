@@ -9,7 +9,6 @@ import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
 import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -23,34 +22,31 @@ public class WebGspConfiguration extends GspConfiguration
 {
 
     @Bean
-    @ConditionalOnMissingBean(name = "groovyPageLayoutFinder")
     public GroovyPageLayoutFinder groovyPageLayoutFinder() {
         GroovyPageLayoutFinder groovyPageLayoutFinder = new GroovyPageLayoutFinder();
-        groovyPageLayoutFinder.setGspReloadEnabled(templateEngineConfig.gspReloadingEnabled);
-        groovyPageLayoutFinder.setCacheEnabled(templateEngineConfig.gspLayoutCaching);
+        groovyPageLayoutFinder.setGspReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
+        groovyPageLayoutFinder.setCacheEnabled(gspTemplateEngineConfig().gspLayoutCaching);
         groovyPageLayoutFinder.setEnableNonGspViews(false);
-        groovyPageLayoutFinder.setDefaultDecoratorName(templateEngineConfig.defaultLayoutName);
+        groovyPageLayoutFinder.setDefaultDecoratorName(gspTemplateEngineConfig().defaultLayoutName);
         return groovyPageLayoutFinder;
     }
 
-    @ConditionalOnMissingBean(name = "groovyPagesTemplateRenderer")
-    GroovyPagesTemplateRenderer groovyPagesTemplateRenderer() {
-        GroovyPagesTemplateRenderer groovyPagesTemplateRenderer = new GroovyPagesTemplateRenderer();
-        groovyPagesTemplateRenderer.setCacheEnabled(!templateEngineConfig.gspReloadingEnabled);
-        return groovyPagesTemplateRenderer;
-    }
+//    GroovyPagesTemplateRenderer groovyPagesTemplateRenderer() {
+//        GroovyPagesTemplateRenderer groovyPagesTemplateRenderer = new GroovyPagesTemplateRenderer();
+//        groovyPagesTemplateRenderer.setCacheEnabled(!gspTemplateEngineConfig().gspReloadingEnabled);
+//        return groovyPagesTemplateRenderer;
+//    }
 
     @Bean
-    @ConditionalOnMissingBean(name = "gspViewResolver")
     public GrailsLayoutViewResolver gspViewResolver() {
         return new GrailsLayoutViewResolver(innerGspViewResolver(), groovyPageLayoutFinder());
     }
 
-    ViewResolver innerGspViewResolver() {
+    protected ViewResolver innerGspViewResolver() {
         GroovyPageViewResolver innerGspViewResolver = new GroovyPageViewResolver(groovyPagesTemplateEngine(),
                 (GrailsConventionGroovyPageLocator) groovyPageLocator());
-        innerGspViewResolver.setAllowGrailsViewCaching(!templateEngineConfig.gspReloadingEnabled || templateEngineConfig.viewCacheTimeout != 0);
-        innerGspViewResolver.setCacheTimeout(templateEngineConfig.gspReloadingEnabled ? templateEngineConfig.viewCacheTimeout : -1);
+        innerGspViewResolver.setAllowGrailsViewCaching(!gspTemplateEngineConfig().gspReloadingEnabled || gspTemplateEngineConfig().viewCacheTimeout != 0);
+        innerGspViewResolver.setCacheTimeout(gspTemplateEngineConfig().gspReloadingEnabled ? gspTemplateEngineConfig().viewCacheTimeout : -1);
         return innerGspViewResolver;
     }
 
@@ -75,7 +71,7 @@ public class WebGspConfiguration extends GspConfiguration
                 return uri;
             }
         };
-        pageLocator.setReloadEnabled(templateEngineConfig.gspReloadingEnabled);
+        pageLocator.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
 
         return pageLocator;
     }

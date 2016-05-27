@@ -1,6 +1,7 @@
 package com.rabbtor.gsp.config.annotation
 
 import com.rabbtor.gsp.tags.ApplicationTagLib
+import com.rabbtor.gsp.tags.FormatTagLib
 import grails.gsp.TagLib
 import groovy.transform.CompileStatic
 import org.grails.plugins.web.taglib.RenderTagLib
@@ -40,7 +41,7 @@ public class WebTagLibraryLookupRegistrar extends TagLibraryLookupRegistrar
     protected void addDefaultTagLibClasses(Set<Class> tagLibClasses)
     {
         super.addDefaultTagLibClasses(tagLibClasses)
-        [ApplicationTagLib, RenderTagLib, SitemeshTagLib].each {
+        [ApplicationTagLib, RenderTagLib, SitemeshTagLib, FormatTagLib].each {
             tagLibClasses.add(it)
         }
     }

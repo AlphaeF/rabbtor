@@ -1,6 +1,7 @@
 package com.rabbtor.gsp.util
 
 import com.rabbtor.web.servlet.support.DefaultIncludeResult
+import com.rabbtor.web.servlet.support.IncludeException
 import com.rabbtor.web.servlet.support.IncludeResult
 import com.rabbtor.web.servlet.support.RequestIncludeHelper
 import com.rabbtor.web.servlet.support.RequestIncludeWrapper
@@ -25,7 +26,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 @CompileStatic
-class GrailsIncludeUtils
+class GspIncludeUtils
 {
     public static final String MATCHED_REQUEST = "org.grails.url.match.info"
 
@@ -143,7 +144,7 @@ class GrailsIncludeUtils
             }
         }
         catch (Exception e) {
-            throw new ControllerExecutionException("Unable to execute include: " + e.getMessage(), e);
+            throw new IncludeException("Unable to execute include: " + e.getMessage(), e);
         }
         finally {
             WebUtils.cleanupIncludeRequestAttributes(request, toRestore);

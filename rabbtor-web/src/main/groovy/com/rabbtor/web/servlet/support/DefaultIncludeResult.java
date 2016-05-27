@@ -41,4 +41,10 @@ public class DefaultIncludeResult extends IncludeResult
     {
         return response.getRedirectUrl();
     }
+
+    @Override
+    public String getContentType()
+    {
+        return response.getContentType();
+    }
 }

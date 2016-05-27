@@ -2,6 +2,9 @@
 
 dependencies {
 
+
+    provided("org.springframework:spring-web:${springVersion}")
+    provided("org.springframework:spring-webmvc:${springVersion}")
     compile ("org.grails:grails-web-gsp-taglib:${grailsVersion}") {
         exclude group:'org.springframework'
         exclude group:'org.slf4j'
@@ -11,8 +14,9 @@ dependencies {
         exclude group:'org.springframework.boot'
 
     }
-    compile (project(':rabbtor-web'))
+    compile("commons-lang:commons-lang:${commonsLangVersion}")
     compile (project(':rabbtor-gsp'))
+    compile (project(':rabbtor-web'))
 
 
 }

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -36,7 +35,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
     }
 
 
-    @Configuration
+
     public static class GspTemplateEngineConfig extends AbstractGspConfig {
 
         @Value("${spring.gsp.templateRoots:}")
@@ -53,23 +52,27 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
 
     }
 
-    @Autowired
-    protected GspTemplateEngineConfig templateEngineConfig;
+    @Bean
+    public GspTemplateEngineConfig gspTemplateEngineConfig() {
+        GspTemplateEngineConfig config = new GspTemplateEngineConfig();
+        overrideConfiguration(config);
+        return config;
+    }
+
+    protected void overrideConfiguration(GspTemplateEngineConfig config)
+    {
+
+    }
 
 
-
-
-
-    @ConditionalOnMissingBean(name="groovyPagesTemplateEngine")
     @Bean(autowire = Autowire.BY_NAME)
     GroovyPagesTemplateEngine groovyPagesTemplateEngine() {
         GroovyPagesTemplateEngine templateEngine = new GroovyPagesTemplateEngine();
-        templateEngine.setReloadEnabled(templateEngineConfig.gspReloadingEnabled);
+        templateEngine.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
         templateEngine.setGroovyPageLocator(groovyPageLocator());
         return templateEngine;
     }
 
-    @ConditionalOnMissingBean(name="groovyPageLocator")
     @Bean(autowire = Autowire.BY_NAME)
     GroovyPageLocator groovyPageLocator() {
         GroovyPageLocator pageLocator = createGroovyPageLocator();
@@ -97,7 +100,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
                 return uri;
             }
         };
-        pageLocator.setReloadEnabled(templateEngineConfig.gspReloadingEnabled);
+        pageLocator.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
 
 
         return pageLocator;
@@ -105,8 +108,8 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
 
     protected List<String> resolveTemplateRoots() {
         List<String> templateRoots = new ArrayList();
-        if (templateEngineConfig.templateRoots != null)
-            templateRoots.addAll(Arrays.asList(templateEngineConfig.templateRoots));
+        if (gspTemplateEngineConfig().templateRoots != null)
+            templateRoots.addAll(Arrays.asList(gspTemplateEngineConfig().templateRoots));
 
         addTemplateRoots(templateRoots);
 
@@ -125,7 +128,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
             return rootPaths;
         }
         else {
-            if (templateEngineConfig.gspReloadingEnabled) {
+            if (gspTemplateEngineConfig().gspReloadingEnabled) {
                 File templateRootDirectory = new File(LOCAL_DIRECTORY_TEMPLATE_ROOT);
                 if (templateRootDirectory.isDirectory()) {
                     return Collections.singletonList("file:" + LOCAL_DIRECTORY_TEMPLATE_ROOT);
