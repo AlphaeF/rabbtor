@@ -1,5 +1,7 @@
 spring.profiles.active='dev'
 
+test='default'
+
 server {
     port= 8889
 }
@@ -64,6 +66,7 @@ environments {
                 }
             }
         }
+        test = 'dev'
     }
 
 
