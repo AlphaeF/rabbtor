@@ -34,9 +34,8 @@ class HomeController
     }
 
     @RequestMapping(path = '/list/{id}')
-    def list(@RequestParam() int id, @RequestParam String[] names) {
-        throw new RuntimeException("test")
-        new ModelAndView("/home/list",[id:id, names: names])
+    def list(@RequestParam(required = false) String[] names) {
+        new ModelAndView("/home/list",[names: names])
     }
 
 

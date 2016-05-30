@@ -8,7 +8,7 @@
         Hi baby test ewewrer
 
         <p>
-            Mvc Url: <g:mvcUrl mapping="HC#list" args="[20, ['test', 'buck&me']]" urivars="[15, 20]"/>
+            Mvc Url: <g:mvcUrl mapping="HC#list" urivars="[15, 20]"/>
         </p>
 
         <p>
@@ -19,9 +19,9 @@
         <p>
             Mvc Include:
 
-        %{--<p>--}%
-            %{--<g:include mapping="HC#list" urivars="[15]" params="[id:10,names:['foo','bar']]" />--}%
-        %{--</p>--}%
+        <p>
+            <g:include mapping="HC#list" urivars="[15]" params="[id:10,names:['foo','bar']]" />
+        </p>
 
         <my:testSet var="size" value="100" />
         ${size}

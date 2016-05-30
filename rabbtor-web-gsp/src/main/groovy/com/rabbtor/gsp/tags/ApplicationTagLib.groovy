@@ -35,7 +35,7 @@ class ApplicationTagLib implements
         GrailsApplicationAware,
         TagLibrary
 {
-    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message', 'include']
+    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message']
     //static encodeAsForTags = ['include', 'none']
 
 

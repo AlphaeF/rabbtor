@@ -121,8 +121,7 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
                 "grails.views.gsp.codecs",
                 "grails.views.gsp.encoding",
                 "grails.views.gsp.keepgenerateddir",
-                "grails.views.gsp.sitemesh.preprocess",
-                "grails.views.gsp.codecs"
+                "grails.views.gsp.sitemesh.preprocess"
         }));
     }
 }

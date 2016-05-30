@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 public class GspTemplateEngineConfig extends AbstractGspConfig
 {
 
-    @Value("${spring.gsp.templateRoots:}")
+    @Value("${spring.gsp.templateRoots:['/WEB-INF/gsp/']}")
     String[] templateRoots;
 
     @Value("${spring.gsp.locator.cacheTimeout:5000}")
