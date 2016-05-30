@@ -4,15 +4,15 @@
 		xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
 		version="2.0">
 
-	<description>Rabbtor Framework JSP Tag Library</description>
+	<description>Rabbtor Framework JSP Form Tag Library</description>
 	<tlib-version>1.0</tlib-version>
 	<short-name>rabbtor</short-name>
 	<uri>http://rabbtor.rabbytes.com/tags</uri>
 
 
 	<tag>
-		<name>include</name>
-		<tag-class>com.rabbtor.web.servlet.jsp.tags.IncludeTag</tag-class>
+		<name>label</name>
+		<tag-class>com.rabbtor.web.servlet.jsp.tags.LabelTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
 			<description>Set path of the web resource to be included.</description>

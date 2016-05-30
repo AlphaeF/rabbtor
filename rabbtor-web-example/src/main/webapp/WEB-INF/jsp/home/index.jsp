@@ -7,6 +7,7 @@
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="rbb" uri="http://rabbtor.rabbytes.com/tags" %>
+<%@ taglib prefix="rbbform" uri="http://rabbtor.rabbytes.com/tags/form" %>
 <%@ taglib prefix="s" uri="http://www.springframework.org/tags" %>
 <html>
     <head>
@@ -18,5 +19,7 @@
             <s:param name="id">20</s:param>
             <s:param name="names">Çağatay,Ali,Ahmet</s:param>
         </rbb:include>
+
+        ${rbbform:propertyDisplayName("",pageContext)}
     </body>
 </html>

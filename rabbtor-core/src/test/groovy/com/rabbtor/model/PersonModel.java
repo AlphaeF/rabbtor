@@ -2,23 +2,28 @@ package com.rabbtor.model;
 
 
 import com.rabbtor.model.annotation.Model;
-import com.rabbtor.model.annotation.ModelProperty;
+import com.rabbtor.model.annotation.ModelName;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Model(value = "person")
 public class PersonModel
 {
-    @ModelProperty(displayName = "name")
+    @ModelName(value = "name")
     private String name;
 
-    @ModelProperty(displayName = "age")
+    @ModelName(value = "age")
     private int age;
 
-    @ModelProperty(displayNameKey = "personid")
+    @ModelName(displayName = "personid")
     private Long id;
+
+    private Map<String,AddressModel> addressMap;
+
+    private AddressModel address;
 
     private Date dateOfBirth;
 
@@ -35,7 +40,7 @@ public class PersonModel
         return privateNum;
     }
 
-    @ModelProperty(displayName = "getName")
+    @ModelName(value = "getName")
     public String getName()
     {
         return name;
@@ -56,7 +61,7 @@ public class PersonModel
         this.age = age;
     }
 
-    @ModelProperty(displayName ="id")
+    @ModelName(value ="id")
     public Long getId()
     {
         return id;
@@ -92,8 +97,28 @@ public class PersonModel
         return addresses;
     }
 
+    public Map<String, AddressModel> getAddressMap()
+    {
+        return addressMap;
+    }
+
+    public void setAddressMap(Map<String, AddressModel> addressMap)
+    {
+        this.addressMap = addressMap;
+    }
+
     public Double[] getRuns()
     {
         return runs;
+    }
+
+    public AddressModel getAddress()
+    {
+        return address;
+    }
+
+    public void setAddress(AddressModel address)
+    {
+        this.address = address;
     }
 }

@@ -26,6 +26,7 @@ ext {
     tomcatVersion = "8.0.32"
     jstlVersion = "1.2"
     freemarkerVersion = '2.3.24-incubating'
+    grailsVersion = "3.1.7"
 
 }
 
@@ -69,6 +70,10 @@ dependencies {
     compile("org.thymeleaf:thymeleaf-spring4:${thymeleafVersion}")
 
     compile("org.freemarker:freemarker:${freemarkerVersion}")
+
+    compile group: 'org.hibernate', name: 'hibernate-validator', version: '4.3.2.Final'
+    compile "org.grails:grails-web-jsp:${grailsVersion}"
+
 
 }
 

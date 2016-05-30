@@ -4,14 +4,10 @@ package com.rabbtor.gsp.config.annotation;
 import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
-import org.grails.taglib.TagLibraryLookup;
 import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -25,39 +21,14 @@ public class GspConfiguration extends GrailsApplicationConfigurationSupport
     private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates/";
 
 
-    public static abstract class AbstractGspConfig {
-        @Value("${spring.gsp.reloadingEnabled:true}")
-        boolean gspReloadingEnabled;
-
-        @Value("${spring.gsp.view.cacheTimeout:1000}")
-        long viewCacheTimeout;
-
-    }
-
-
-
-    public static class GspTemplateEngineConfig extends AbstractGspConfig {
-
-        @Value("${spring.gsp.templateRoots:}")
-        String[] templateRoots;
-
-        @Value("${spring.gsp.locator.cacheTimeout:5000}")
-        long locatorCacheTimeout;
-
-        @Value("${spring.gsp.layout.caching:true}")
-        boolean gspLayoutCaching;
-
-        @Value("${spring.gsp.layout.default:#{null}")
-        String defaultLayoutName;
-
-    }
-
     @Bean
     public GspTemplateEngineConfig gspTemplateEngineConfig() {
         GspTemplateEngineConfig config = new GspTemplateEngineConfig();
         overrideConfiguration(config);
         return config;
     }
+
+
 
     protected void overrideConfiguration(GspTemplateEngineConfig config)
     {

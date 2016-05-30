@@ -3,7 +3,6 @@ package com.rabbtor.gsp.config.annotation;
 
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
-import org.grails.web.gsp.GroovyPagesTemplateRenderer;
 import org.grails.web.gsp.io.CachingGrailsConventionGroovyPageLocator;
 import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;

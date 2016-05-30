@@ -1,10 +1,6 @@
 package com.rabbtor.model;
 
 
-import org.springframework.core.convert.TypeDescriptor;
-
-import java.beans.PropertyDescriptor;
-
 public interface ModelPropertyMetadata
 {
 
@@ -16,7 +12,7 @@ public interface ModelPropertyMetadata
 
     String getDisplayName();
 
-    String getDisplayNameKey();
+    String getModelName();
 
     Class<?> getPropertyType();
 
@@ -30,8 +26,9 @@ public interface ModelPropertyMetadata
 
     ModelMetadata getComponentMetadata();
 
+    ModelMetadata getPropertyTypeMetadata();
 
+    Class<?> getDeclaringClass();
 
-
-
+    ModelMetadata getDeclaringModelMetadata();
 }

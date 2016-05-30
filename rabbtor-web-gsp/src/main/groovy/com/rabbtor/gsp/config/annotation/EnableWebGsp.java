@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({WebGspConfiguration.class,WebTagLibraryLookupRegistrar.class})
+@Import({WebGspConfiguration.class,WebTagLibraryLookupRegistrar.class,GspJspConfiguration.class})
 public @interface EnableWebGsp
 {
     TagLibScan tagLibScan() default @TagLibScan;

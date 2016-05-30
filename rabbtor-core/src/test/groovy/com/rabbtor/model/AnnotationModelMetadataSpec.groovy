@@ -102,9 +102,9 @@ class AnnotationModelMetadataSpec extends Specification
 
 
         then:
-        personMeta.name == 'person'
-        driverMeta.name == 'com.rabbtor.model.DriverModel'
-        pilotMeta.name == 'pilot'
+        personMeta.modelName == 'person'
+        driverMeta.modelName == 'driverModel'
+        pilotMeta.modelName == 'pilot'
 
         // getter method overrides field
         nameProp.displayName == 'getName'
@@ -114,11 +114,11 @@ class AnnotationModelMetadataSpec extends Specification
 
         // display name and key must be null if not set
         dateOfBirthProp.displayName == null
-        dateOfBirthProp.displayNameKey == null
+        dateOfBirthProp.modelName == null
 
         // but overridable
         pilotDateOfBirthProp.displayName == "Date of Birth"
-        pilotDateOfBirthProp.displayNameKey == "dateofbirth"
+        pilotDateOfBirthProp.modelName == "dateofbirth"
 
 
     }

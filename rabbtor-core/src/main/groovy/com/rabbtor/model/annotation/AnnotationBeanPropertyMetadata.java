@@ -5,11 +5,9 @@ import com.rabbtor.model.ModelMetadata;
 import com.rabbtor.model.ModelMetadataProvider;
 import com.rabbtor.model.ModelPropertyMetadata;
 import com.rabbtor.model.UnsupportedModelException;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -19,21 +17,22 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
+public class AnnotationBeanPropertyMetadata implements ModelPropertyMetadata
 {
 
     private PropertyDescriptor propertyDescriptor;
+    private ModelMetadata declaringModelMetadata;
     private ModelMetadataProvider metadataProvider;
     private Class<?> componentType;
     private String displayName;
-    private String displayNameKey;
-    private boolean bindable;
+    private String modelName;
     private Property property;
     private TypeDescriptor typeDescriptor;
 
 
-    public AnnotationModelPropertyMetadata(ModelMetadataProvider metadataProvider, PropertyDescriptor propertyDescriptor)
+    public AnnotationBeanPropertyMetadata(ModelMetadata declaringModelMetadata,ModelMetadataProvider metadataProvider, PropertyDescriptor propertyDescriptor)
     {
+        this.declaringModelMetadata = declaringModelMetadata;
         this.metadataProvider = metadataProvider;
         this.propertyDescriptor = propertyDescriptor;
         this.property = new Property(propertyDescriptor.getReadMethod().getDeclaringClass(),propertyDescriptor.getReadMethod(),propertyDescriptor.getWriteMethod());
@@ -48,8 +47,8 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
 
     protected void setDefaultValues()
     {
-        bindable = true;
-        displayName = null;
+        modelName = propertyDescriptor.getName();
+        displayName = modelName;
     }
 
     private boolean hasComponentType()
@@ -64,7 +63,7 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
 
         Type type = resolveGenericCompontentType();
         if (type == null)
-            throw new UnsupportedModelException(String.format("Could not resolve component type for property %s of class %s", getName(), getDeclaringClass()));
+            throw new UnsupportedModelException(String.format("Could not resolveOrDefault component type for property %s of class %s", getName(), getDeclaringClass()));
 
         try {
             return (Class<?>)type;
@@ -96,18 +95,17 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
 
     private void processAnnotations()
     {
-        ModelProperty anno = AnnotatedElementUtils.findMergedAnnotation(propertyDescriptor.getReadMethod(),ModelProperty.class);
+        ModelName anno = AnnotatedElementUtils.findMergedAnnotation(propertyDescriptor.getReadMethod(),ModelName.class);
         if (anno == null)
         {
             Field field = getField();
             if (field != null)
-                anno = field.getAnnotation(ModelProperty.class);
+                anno = field.getAnnotation(ModelName.class);
         }
 
         if (anno != null) {
-            setBindable(anno.bindable());
+            setModelName(StringUtils.isEmpty(anno.value()) ? null : anno.value());
             setDisplayName(StringUtils.isEmpty(anno.displayName()) ? null : anno.displayName());
-            setDisplayNameKey(StringUtils.isEmpty(anno.displayNameKey()) ? null : anno.displayNameKey());
         }
 
     }
@@ -132,14 +130,15 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
         return field;
     }
 
-    protected Class<?> getDeclaringClass()
+    public Class<?> getDeclaringClass()
     {
-        if (propertyDescriptor.getReadMethod() != null) {
-            return propertyDescriptor.getReadMethod().getDeclaringClass();
-        }
-        else {
-            return propertyDescriptor.getWriteMethod().getDeclaringClass();
-        }
+//        if (propertyDescriptor.getReadMethod() != null) {
+//            return propertyDescriptor.getReadMethod().getDeclaringClass();
+//        }
+//        else {
+//            return propertyDescriptor.getWriteMethod().getDeclaringClass();
+//        }
+        return getDeclaringModelMetadata().getModelType();
     }
 
     protected void setDisplayName(String displayName)
@@ -147,19 +146,10 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
         this.displayName = displayName;
     }
 
-    protected void setDisplayNameKey(String displayNameKey)
+    protected void setModelName(String modelName)
     {
-        this.displayNameKey = displayNameKey;
+        this.modelName = modelName;
     }
-
-
-
-    protected void setBindable(boolean bindable)
-    {
-        this.bindable = bindable;
-    }
-
-
 
 
 
@@ -189,9 +179,9 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
     }
 
     @Override
-    public String getDisplayNameKey()
+    public String getModelName()
     {
-        return displayNameKey;
+        return modelName;
     }
 
     @Override
@@ -234,15 +224,26 @@ public class AnnotationModelPropertyMetadata implements ModelPropertyMetadata
     }
 
     @Override
+    public ModelMetadata getPropertyTypeMetadata()
+    {
+        return metadataProvider.getModelMetadata(getPropertyType());
+    }
+
+    @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        AnnotationModelPropertyMetadata that = (AnnotationModelPropertyMetadata) o;
+        AnnotationBeanPropertyMetadata that = (AnnotationBeanPropertyMetadata) o;
 
         return propertyDescriptor.equals(that.propertyDescriptor);
 
+    }
+
+    public ModelMetadata getDeclaringModelMetadata()
+    {
+        return declaringModelMetadata;
     }
 
     @Override

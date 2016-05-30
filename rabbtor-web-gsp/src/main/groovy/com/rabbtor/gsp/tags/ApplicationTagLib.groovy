@@ -247,9 +247,9 @@ class ApplicationTagLib implements
      *
      * @emptyTag
      *
-     * @attr error The error to resolve the message for. Used for built-in Grails messages.
-     * @attr message The object to resolve the message for. Objects must implement org.springframework.context.MessageSourceResolvable.
-     * @attr code The code to resolve the message for. Used for custom application messages.
+     * @attr error The error to resolveOrDefault the message for. Used for built-in Grails messages.
+     * @attr message The object to resolveOrDefault the message for. Objects must implement org.springframework.context.MessageSourceResolvable.
+     * @attr code The code to resolveOrDefault the message for. Used for custom application messages.
      * @attr args A list of argument values to apply to the message, when code is used.
      * @attr default The default message to output if the error or code cannot be found in messages.properties.
      * @attr encodeAs The name of a codec to apply, i.e. HTML, JavaScript, URL etc

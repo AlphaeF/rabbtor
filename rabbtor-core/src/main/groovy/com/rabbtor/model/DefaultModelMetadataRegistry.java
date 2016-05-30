@@ -1,11 +1,9 @@
 package com.rabbtor.model;
 
 
-
 import com.rabbtor.model.annotation.AnnotationModelMetadataProvider;
-import org.springframework.core.Ordered;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,16 +11,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DefaultModelMetadataProvider implements ModelMetadataProvider
+public class DefaultModelMetadataRegistry implements ModelMetadataRegistry
 {
     private List<ModelMetadataProvider> providers = new ArrayList<>();
     private Map<Class<?>,ModelMetadata> metadataMap = new ConcurrentHashMap<>();
 
-    public DefaultModelMetadataProvider()
+    public DefaultModelMetadataRegistry()
     {
         providers.add(new AnnotationModelMetadataProvider());
     }
 
+    @Autowired(required = false)
     public void setProviders(List<ModelMetadataProvider> providers)
     {
         if (providers != null)
@@ -50,6 +49,9 @@ public class DefaultModelMetadataProvider implements ModelMetadataProvider
         if (metadata == null)
             metadata = new EmptyModelMetadata(modelType);
 
-        return metadataMap.put(modelType,metadata);
+        metadataMap.put(modelType,metadata);
+        return metadata;
     }
+
+
 }

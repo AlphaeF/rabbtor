@@ -1,13 +1,12 @@
 package com.rabbtor.example.web.models
 
 import com.rabbtor.model.annotation.Model
-import com.rabbtor.model.annotation.ModelProperty
-import org.springframework.web.bind.annotation.ModelAttribute
+import com.rabbtor.model.annotation.ModelName
 
 @Model(name="person")
 class EditPersonModel
 {
-    @ModelProperty(displayName = "Name")
+    @ModelName(value = "Name")
     String name
     Long id
 

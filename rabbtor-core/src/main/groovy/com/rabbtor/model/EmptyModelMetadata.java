@@ -14,7 +14,7 @@ public class EmptyModelMetadata implements ModelMetadata
     }
 
     @Override
-    public String getName()
+    public String getModelName()
     {
         return modelType.getName();
     }

@@ -26,7 +26,6 @@ ext {
     bintrayPublish = false
     // Sets release version
     rabbtorVersion = '1.0.0.BUILD-SNAPSHOT'
-    grailsVersion = '3.1.7'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 
@@ -41,6 +40,7 @@ ext {
     gantVersion = "1.9.6"
     gdocEngineVersion = "1.0.1"
     groovyVersion = System.getenv('CI_GROOVY_VERSION') ?: "2.4.6"
+    grailsVersion = '3.1.7'
     ivyVersion = "2.3.0"
     jansiVersion = "1.11"
     jlineVersion = "2.12"
@@ -65,7 +65,7 @@ ext {
     ovalVersion = '1.85'
     thymeleafVersion = "3.0.0.BETA03"
     freemarkerVersion = '2.3.24-incubating'
-    validationApiVersion = '1.1.0.Final'
+    validationApiVersion = '1.0.0.GA'
 
     isJava8Compatible = org.gradle.api.JavaVersion.current().isJava8Compatible()
 

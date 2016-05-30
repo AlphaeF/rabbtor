@@ -12,8 +12,8 @@ dependencies {
         exclude group:'org.hibernate.javax.persistence'
         exclude group:'org.codehaus.groovy',module:'groovy'
         exclude group:'org.springframework.boot'
-
     }
+    provided "org.grails:grails-web-jsp:${grailsVersion}"
     compile("commons-lang:commons-lang:${commonsLangVersion}")
     compile (project(':rabbtor-gsp'))
     compile (project(':rabbtor-web'))
