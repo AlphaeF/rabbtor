@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface TagLibScan
+public @interface GspTagLibScan
 {
     /**
      * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation

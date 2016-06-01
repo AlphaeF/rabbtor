@@ -10,11 +10,11 @@ buildscript {
     }
     dependencies {
         classpath "commons-io:commons-io:2.2"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.1"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6"
         classpath "com.netflix.nebula:gradle-extra-configurations-plugin:2.2.0"
         classpath "com.github.adrianbk:gradle-travisci-trigger-plugin:1.0.0"
         classpath 'com.bmuschko:gradle-nexus-plugin:2.3'
-        classpath 'net.gvmtool:gradle-sdkvendor-plugin:0.3.1'
+        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3"
         classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
         classpath "org.springframework:springloaded:$springLoadedVersion"
     }
@@ -23,9 +23,9 @@ buildscript {
 apply plugin: 'idea'
 
 ext {
-    bintrayPublish = false
+    bintrayPublish = true
     // Sets release version
-    rabbtorVersion = '1.0.0.BUILD-SNAPSHOT'
+    rabbtorVersion = '1.0.0'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 
@@ -105,11 +105,49 @@ ext.groovyDependency = dependencies.create("org.codehaus.groovy:groovy:${groovyV
     exclude module: "ant"
 }
 
+allprojects {
+
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}
 
 subprojects { project ->
     version = rabbtorVersion
     group = "com.rabbtor"
     ext.isTestSuite = project.name.startsWith("rabbtor-test-suite")
+    ext.isExample = project.name.endsWith("-example")
+    ext.isCiBuild = project.hasProperty("isCiBuild")
+    ext.pomInfo = {
+        delegate.name 'Rabbtor'
+        delegate.description 'Rabbtor Spring Extensions'
+        delegate.url 'http://rabbtor.com/'
+
+//        delegate.licenses {
+//            delegate.license {
+//                delegate.name 'Rabbytes Proprietary License, Version 1.0'
+//                delegate.url 'http://www.rabbytes.com/licenses/LICENSE-1.0.txt'
+//                delegate.distribution 'repo'
+//            }
+//        }
+
+//        delegate.scm {
+//            delegate.url 'scm:git@github.com:grails/grails-core.git'
+//            delegate.connection 'scm:git@github.com:grails/grails-core.git'
+//            delegate.developerConnection 'scm:git@github.com:grails/grails-core.git'
+//        }
+
+        delegate.developers {
+            delegate.developer {
+                delegate.id 'cagataykalan'
+                delegate.name 'Cagatay Kalan'
+            }
+        }
+
+    }
 
     if (project.name  == 'rabbtor-web-example' ||
         project.name == 'rabbtory-dummy')
@@ -134,7 +172,7 @@ subprojects { project ->
     targetCompatibility = "1.8"
 
     repositories {
-        maven { url  "http://rabbytes.bintray.com/grails-core" }
+        maven { url  "http://rabbytes.bintray.com/maven" }
         maven { url  "http://repo.grails.org/grails/grails-core" }
         mavenLocal()
         jcenter()
@@ -249,6 +287,112 @@ subprojects { project ->
         {
             jvmArgs debugArguments
         }
+    }
+
+    if(!isTestSuite && !isExample) {
+
+        modifyPom {
+            delegate.project {
+                def updatePom = pomInfo.clone()
+                updatePom.delegate = delegate
+                updatePom()
+            }
+        }
+
+        task installToHomeDist(type: Upload) {
+            configuration = configurations.archives
+            repositories {
+                flatDir name: 'libs', dirs: distInstallDir
+            }
+        }
+
+        publishing {
+
+            repositories {
+                maven {
+                    credentials {
+                        def u = System.getenv("ARTIFACTORY_USERNAME") ?: project.hasProperty("artifactoryPublishUsername") ? project.artifactoryPublishUsername : ''
+                        def p = System.getenv("ARTIFACTORY_PASSWORD") ?: project.hasProperty("artifactoryPublishPassword") ? project.artifactoryPublishPassword : ''
+                        username = u
+                        password = p
+                    }
+                    if(isBuildSnapshot) {
+                        url  "https://rabbytes.bintray.com/maven-snapshots-local"
+                    }
+                    else {
+                        url "http://rabbytes.bintray.com/maven-releases-local"
+                    }
+                }
+            }
+
+            publications {
+                maven(MavenPublication) {
+                    from components.java
+
+                    artifact sourcesJar {
+                        classifier "sources"
+                    }
+                    artifact javadocJar {
+                        classifier "javadoc"
+                    }
+
+                    pom.withXml {
+                        def xml = asNode()
+
+                        xml.children().last() + pomInfo
+                    }
+
+                }
+            }
+        }
+
+
+        bintray {
+            def u = System.getenv("BINTRAY_USER") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
+            def p = System.getenv("BINTRAY_KEY") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
+
+            user = u
+            key = p
+            publications = ['maven']
+            publish = bintrayPublish
+            pkg {
+                repo = 'maven'
+                userOrg = 'rabbytes'
+                name = 'com.rabbtor'
+                desc = 'Rabbtor Spring Extensions'
+                websiteUrl = 'http://rabbtor.com'
+                issueTrackerUrl = ''
+                vcsUrl = ''
+                licenses = ['Rabbytes-1.0']
+
+                publicDownloadNumbers = false
+                version {
+                    name = project.version
+                    gpg {
+                        sign = true
+                        passphrase = System.getenv("SIGNING_PASSPHRASE") ?: project.hasProperty("signingPassphrase") ? project.signingPassphrase : ''
+                    }
+                    mavenCentralSync {
+                        sync = false
+                        def ossUser = System.getenv("SONATYPE_USERNAME") ?: project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : ''
+                        def ossPass = System.getenv("SONATYPE_PASSWORD") ?: project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : ''
+                        user = ossUser
+                        password = ossPass
+                    }
+
+                }
+            }
+        }
+
+        project.tasks.withType(org.gradle.api.publish.maven.tasks.PublishToMavenLocal) { org.gradle.api.publish.maven.tasks.PublishToMavenLocal t ->
+            t.dependsOn installToHomeDist
+            t.doLast {
+                ant.copy(todir: homeDistDir, flatten: true, includeEmptyDirs: false) {
+                    fileset dir: distInstallDir
+                }
+            }
+        }
+
     }
 
     task singleTest(type: Test) {

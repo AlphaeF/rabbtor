@@ -24,6 +24,7 @@ spring {
         }
     }
     gsp {
+        enabled=true
         templateRoots = ['/WEB-INF/gsp/']
     }
     mvc {

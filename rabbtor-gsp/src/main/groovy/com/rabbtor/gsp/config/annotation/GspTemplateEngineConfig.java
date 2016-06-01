@@ -62,4 +62,11 @@ public class GspTemplateEngineConfig extends AbstractGspConfig
         this.defaultLayoutName = defaultLayoutName;
     }
 
+    public GspTemplateEngineConfig()
+    {
+        templateRoots = new String[] {"/WEB-INF/gsp/"};
+        locatorCacheTimeout = 5000;
+        gspLayoutCaching = true;
+        defaultLayoutName = null;
+    }
 }

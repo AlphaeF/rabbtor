@@ -10,9 +10,8 @@ import org.springframework.validation.Errors;
 public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
 {
     private ModelMetadataRegistry metadataRegistry;
-
-
     private Class modelType;
+    private String modelName;
 
 
     public DefaultModelMetadataAccessor(Class modelType)
@@ -21,9 +20,6 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
         this.modelType = modelType;
         metadataRegistry = new DefaultModelMetadataRegistry()
     }
-
-
-
 
     public ModelMetadataRegistry getMetadataRegistry()
     {
@@ -61,7 +57,7 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
                 hasIndex = true
             }
 
-            def prop = model.getProperties().find { it.name == part }
+            def prop = model.getProperties().find { it.propertyName == part }
             if (prop == null)
                 return null
 
@@ -84,7 +80,7 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
     @Override
     String[] getModelNameCodes(String propertyPath)
     {
-        return getModelNameCodes(propertyPath,null)
+        return getModelNameCodes(propertyPath,getModelName())
     }
 
     @Override
@@ -96,26 +92,31 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
         String propertyName = getPropertyNameFromPath(propertyPath)
         result << propertyName
 
-        ModelPropertyMetadata metadata = getPropertyMetadata(propertyPath);
-        ModelMetadata modelMeta = null
-        if (metadata != null) {
-            if (!modelName) {
-                modelMeta = metadata.getDeclaringModelMetadata()
-                modelName = modelMeta.modelName
+
+        String declaringModelName;
+        if (propertyPath.contains(Errors.NESTED_PATH_SEPARATOR)) {
+            // nested property. find declaring metadata
+            ModelPropertyMetadata metadata = getPropertyMetadata(propertyPath)
+            ModelMetadata declaringModelMetadata = metadata.getDeclaringModelMetadata()
+            if (declaringModelMetadata != null) {
+                declaringModelName = declaringModelMetadata.modelName
+                if (declaringModelName == null)
+                    declaringModelName = createDefaultModelName(declaringModelMetadata)
             }
+
+            if (StringUtils.hasText(declaringModelName))
+                result << declaringModelName + Errors.NESTED_PATH_SEPARATOR + propertyName
         }
 
-        if (!modelName)
-            modelName = createDefaultModelName(modelMeta)
-        result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyName
+        if (modelName == null)
+            modelName = createDefaultModelName(modelMetadata)
 
-        if (metadata != null) {
-            if (StringUtils.hasText(metadata.modelName) && !propertyName.equalsIgnoreCase(metadata.modelName))
-            {
-                result << metadata.modelName
-                result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyName
-            }
-        }
+        String propertyPathWithoutIndexes = propertyPath.replaceAll("\\[.*\\]","")
+        if (propertyPathWithoutIndexes.length() != propertyPath)
+            result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPathWithoutIndexes
+
+        if (StringUtils.hasText(modelName))
+            result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPath
 
         result = result.reverse()
 
@@ -125,11 +126,37 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
     @Override
     String getDisplayName(String propertyPath)
     {
-        String propName = getPropertyNameFromPath(propertyPath)
+        Assert.hasText(propertyPath,"propertyPath must not be empty.")
         ModelPropertyMetadata propertyMetadata = getPropertyMetadata(propertyPath)
-        if (propertyMetadata != null && StringUtils.hasText(propertyMetadata.displayName) )
-            propName = propertyMetadata.displayName
-        return propName
+        if (propertyMetadata == null)
+            return getPropertyNameFromPath(propertyPath);
+
+        if (StringUtils.hasText(propertyMetadata.displayName))
+            return propertyMetadata.displayName
+        return getPropertyNameFromPath(propertyPath)
+    }
+
+    @Override
+    String getModelName()
+    {
+        if (modelName != null)
+            return modelName
+
+        return getModelNameOrDefault(modelMetadata)
+    }
+
+    protected String getModelNameOrDefault(ModelMetadata modelMetadata)
+    {
+        if (modelMetadata != null && modelMetadata.modelName != null)
+            return modelMetadata.modelName
+        return createDefaultModelName(modelMetadata)
+    }
+
+    @Override
+    void setModelName(String modelName)
+    {
+        Assert.notNull(modelName,"modelName must not be null.For empty model names, please use empty string(\"\").")
+        this.modelName = modelName;
     }
 
     String createDefaultModelName(ModelMetadata modelMetadata)
@@ -140,12 +167,12 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
     String getPropertyNameFromPath(String propertyPath)
     {
         String propName = propertyPath
-        if (propName.endsWith('.'))
-            propName = propName.substring(0,propName.length()-1)
+        if (propName.endsWith(Errors.NESTED_PATH_SEPARATOR))
+            propName = propName.substring(0,propName.length()-Errors.NESTED_PATH_SEPARATOR.length())
 
         def lastDot = propName.lastIndexOf('.')
         if (lastDot != -1)
-            propName = propName.substring(0,lastDot)
+            propName = propName.substring(lastDot+1,propName.length())
 
         return propName
     }

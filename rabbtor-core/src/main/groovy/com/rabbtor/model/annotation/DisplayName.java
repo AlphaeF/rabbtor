@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD,ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ModelName
+public @interface DisplayName
 {
     /**
      * Alias for {@link #name}.
@@ -25,5 +25,5 @@ public @interface ModelName
     @AliasFor("value")
     String name() default "";
 
-    String displayName() default "";
+    String key() default "";
 }

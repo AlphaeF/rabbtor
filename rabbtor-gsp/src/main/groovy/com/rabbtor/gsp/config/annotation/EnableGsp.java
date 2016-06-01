@@ -7,8 +7,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({GspConfiguration.class,TagLibraryLookupRegistrar.class})
+@Import({GspConfigurationSupport.class})
 public @interface EnableGsp
 {
-    Class<?>[] tagLibClasses() default {};
 }

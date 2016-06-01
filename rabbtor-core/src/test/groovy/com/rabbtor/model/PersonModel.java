@@ -2,7 +2,7 @@ package com.rabbtor.model;
 
 
 import com.rabbtor.model.annotation.Model;
-import com.rabbtor.model.annotation.ModelName;
+import com.rabbtor.model.annotation.DisplayName;
 
 import java.util.Date;
 import java.util.List;
@@ -12,13 +12,13 @@ import java.util.Set;
 @Model(value = "person")
 public class PersonModel
 {
-    @ModelName(value = "name")
+    @DisplayName(value = "name")
     private String name;
 
-    @ModelName(value = "age")
+    @DisplayName(value = "age")
     private int age;
 
-    @ModelName(displayName = "personid")
+    @DisplayName(key = "personid")
     private Long id;
 
     private Map<String,AddressModel> addressMap;
@@ -40,7 +40,7 @@ public class PersonModel
         return privateNum;
     }
 
-    @ModelName(value = "getName")
+    @DisplayName(value = "getName")
     public String getName()
     {
         return name;
@@ -61,7 +61,7 @@ public class PersonModel
         this.age = age;
     }
 
-    @ModelName(value ="id")
+    @DisplayName(value ="id")
     public Long getId()
     {
         return id;

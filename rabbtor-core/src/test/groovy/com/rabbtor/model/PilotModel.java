@@ -1,7 +1,7 @@
 package com.rabbtor.model;
 
 import com.rabbtor.model.annotation.Model;
-import com.rabbtor.model.annotation.ModelName;
+import com.rabbtor.model.annotation.DisplayName;
 
 import java.util.Date;
 
@@ -9,14 +9,14 @@ import java.util.Date;
 public class PilotModel extends PersonModel
 {
     @Override
-    @ModelName(value = "Pilot Name")
+    @DisplayName(value = "Pilot Name")
     public String getName()
     {
         return super.getName();
     }
 
     @Override
-    @ModelName(value = "Date of Birth", displayName = "dateofbirth")
+    @DisplayName(value = "Date of Birth", key = "dateofbirth")
     public Date getDateOfBirth()
     {
         return super.getDateOfBirth();

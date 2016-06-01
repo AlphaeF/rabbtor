@@ -1,6 +1,8 @@
 package com.rabbtor.model;
 
 
+import java.beans.PropertyDescriptor;
+
 public interface ModelPropertyMetadata
 {
 
@@ -8,7 +10,7 @@ public interface ModelPropertyMetadata
 
     boolean isWriteOnly();
 
-    String getName();
+    String getPropertyName();
 
     String getDisplayName();
 
@@ -31,4 +33,5 @@ public interface ModelPropertyMetadata
     Class<?> getDeclaringClass();
 
     ModelMetadata getDeclaringModelMetadata();
+
 }

@@ -3,27 +3,19 @@
 <html>
     <body>
 
-        <form:form modelAttribute="addCommand" >
+        <form:form modelAttribute="registerCommand" >
 
             <rbbform:label path="name" />
             <form:input path="name" />
             <form:errors path="name" />
 
-            <rbbform:label path="id" />
-            <form:input path="id" />
-            <form:errors path="id" />
-
-            <rbbform:label path="address.zipcode" />
-            <form:input path="address.zipcode" />
-            <form:errors path="address.zipcode" />
+            <rbbform:label path="department" />
+            <form:input path="department" />
+            <form:errors path="department" />
 
 
-            <g:each in="${addCommand.addresses}" var="address" status="i" >
+            <g:each in="${registerCommand.addresses}" var="address" status="i" >
                 <g:set var="path" value="${"addresses[$i].zipcode".toString()}" />
-                <form:label path="${path}">
-                    Test
-                    ${rbbform:displayNameFor(path,pageContext)}
-                </form:label>
                 <form:input path="${path}" />
             </g:each>
 

@@ -11,4 +11,9 @@ public class UnsupportedModelException extends RuntimeException
     {
         super(message);
     }
+
+    public UnsupportedModelException(String message, Throwable cause)
+    {
+        super(message, cause);
+    }
 }

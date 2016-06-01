@@ -1,11 +1,11 @@
 package com.rabbtor.model;
 
 
-import com.rabbtor.model.annotation.ModelName;
+import com.rabbtor.model.annotation.DisplayName;
 
 public class AddressModel
 {
-    @ModelName
+
     String zipCode;
 
     public String getZipCode()

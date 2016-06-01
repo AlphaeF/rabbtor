@@ -2,9 +2,7 @@ package com.rabbtor.gsp.config.annotation;
 
 import org.springframework.beans.factory.annotation.Value;
 
-/**
- * Created by Cagatay on 29.05.2016.
- */
+
 public abstract class AbstractGspConfig
 {
     @Value("${spring.gsp.reloadingEnabled:true}")
@@ -31,5 +29,11 @@ public abstract class AbstractGspConfig
     public void setViewCacheTimeout(long viewCacheTimeout)
     {
         this.viewCacheTimeout = viewCacheTimeout;
+    }
+
+    protected AbstractGspConfig()
+    {
+        gspReloadingEnabled = true;
+        viewCacheTimeout = 1000;
     }
 }

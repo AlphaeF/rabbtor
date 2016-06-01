@@ -1,22 +1,17 @@
 package com.rabbtor.example.web.controllers
 
 import com.rabbtor.example.web.models.EditPersonModel
-import com.rabbtor.model.annotation.ModelName
+import com.rabbtor.model.annotation.DisplayName
 import org.hibernate.validator.constraints.NotEmpty
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Controller
-import org.springframework.ui.Model
 import org.springframework.validation.BindingResult
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.context.request.ServletWebRequest
-import org.springframework.web.context.support.WebApplicationContextUtils
 import org.springframework.web.servlet.ModelAndView
 
 import javax.validation.Valid
-import javax.validation.Validation
-import javax.validation.Validator
 import javax.validation.constraints.NotNull
 
 @Controller
@@ -40,37 +35,43 @@ class HomeController
 
 
     @RequestMapping(path='/add',method=RequestMethod.GET)
-    def add(AddCommand cmd) {
+    def add(RegisterCommand cmd) {
 
         '/home/add'
     }
 
     @RequestMapping(path = '/add',method = RequestMethod.POST)
-    def addPost(@Valid AddCommand cmd, BindingResult cmdErrors) {
+    def addPost(@Valid RegisterCommand cmd, BindingResult cmdErrors) {
         '/home/add'
     }
 }
 
-class AddCommand {
+class RegisterCommand
+{
 
-    @NotNull
+    @NotEmpty
+    @DisplayName("Name")
     String name
 
     @NotNull
-    @ModelName(displayName = "Person Id")
-    Long id
+    @DisplayName("Department")
+    Long department
 
     @Valid
-    AddresCommand address
+    List<AddressCommand> addresses = []
 
-    List<AddresCommand> addresses = [new AddresCommand(),new AddresCommand()]
-
+    RegisterCommand()
+    {
+        // Add one address to be displayed on form
+        addresses.add( new AddressCommand())
+    }
 }
 
-class AddresCommand {
+class AddressCommand
+{
 
     @NotEmpty
-    @ModelName(displayName = "Zip Code")
+    @DisplayName("Zipcode")
     String zipcode
 
 }

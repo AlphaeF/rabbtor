@@ -13,5 +13,9 @@ public interface ModelMetadataAccessor
 
     String getDisplayName(String propertyPath);
 
+    String getModelName();
+
+    void setModelName(String modelName);
+
 
 }

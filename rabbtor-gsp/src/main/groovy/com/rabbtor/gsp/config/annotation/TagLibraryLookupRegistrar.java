@@ -23,6 +23,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 {
 
     public static final String GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME = "gspTagLibraryLookup";
+    public static final String GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME = "gspTagLibraryRegistry";
     public static final String TAG_LIBRARY_LOOKUP_BEAN_NAME = "tagLibraryLookup";
 
     @Override
@@ -35,9 +36,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
             return;
 
         Set<String> packagesToScan = getPackagesToScan(importingClassMetadata,attributes);
-        Set<Class> tagLibClasses = new HashSet();
-        tagLibClasses.addAll(getProvidedClasses(attributes));
-        addDefaultTagLibClasses(tagLibClasses);
+        Set<Class<?>> tagLibClasses = new HashSet();
 
         ManagedList<GenericBeanDefinition> list = new ManagedList<GenericBeanDefinition>();
         for (Class tagLibClass : tagLibClasses) {
@@ -46,11 +45,28 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 
         scanPackages(importingClassMetadata,registry,packagesToScan,list);
 
-        if (!registry.containsBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME)) {
+        if (!registry.containsBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME)) {
             registerBean(registry,list);
+        } else {
+            updateBeanDefinition(registry,list);
         }
 
     }
+
+    private void updateBeanDefinition(BeanDefinitionRegistry registry, ManagedList<GenericBeanDefinition> list)
+    {
+
+    }
+
+    private Collection<? extends Class<?>> resolveFromTagLibRegistry(BeanDefinitionRegistry registry)
+    {
+        if (registry.containsBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME))
+            return (Collection<? extends Class<?>>) registry.getBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME).getPropertyValues()
+                .get("tagLibInstances");
+        return Collections.emptySet();
+    }
+
+
 
     protected void scanPackages(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, Set<String> packagesToScan, ManagedList<GenericBeanDefinition> list)
     {
@@ -107,20 +123,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
     }
 
 
-
-    private Set<Class> getProvidedClasses(AnnotationAttributes attributes)
-    {
-        return Arrays.asList(attributes.getClassArray("tagLibClasses"))
-                .stream().collect(Collectors.toSet());
-    }
-
-
-
-    private Set<String> getPackagesToScan(AnnotationMetadata metadata,AnnotationAttributes baseAttributes) {
-
-        AnnotationAttributes attributes = baseAttributes.getAnnotation("tagLibScan");
-        if (attributes == null)
-            return Collections.emptySet();
+    private Set<String> getPackagesToScan(AnnotationMetadata metadata,AnnotationAttributes attributes) {
 
         String[] value = attributes.getStringArray("value");
         String[] basePackages = attributes.getStringArray("basePackages");
@@ -162,7 +165,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 
     public Class<? extends Annotation> getAnnotationClass()
     {
-        return EnableGsp.class;
+        return GspTagLibScan.class;
     }
 
     public abstract Class getLookupBeanClass();

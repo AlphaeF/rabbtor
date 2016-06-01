@@ -73,9 +73,9 @@ class AnnotationModelMetadataSpec extends Specification
     def 'test component types of collections'()
     {
         when:
-        def addressProp = personMeta.properties.find { it.name == 'addresses' }
-        def rolesProp = personMeta.properties.find { it.name == 'roles' }
-        def runsProp = personMeta.properties.find { it.name == 'runs' }
+        def addressProp = personMeta.properties.find { it.propertyName == 'addresses' }
+        def rolesProp = personMeta.properties.find { it.propertyName == 'roles' }
+        def runsProp = personMeta.properties.find { it.propertyName == 'runs' }
 
         then:
         addressProp.componentType == AddressModel
@@ -95,10 +95,10 @@ class AnnotationModelMetadataSpec extends Specification
     def 'test model names'()
     {
         when:
-        def nameProp = personMeta.properties.find { it.name == 'name' }
-        def pilotNameProp = pilotMeta.properties.find { it.name == 'name' }
-        def dateOfBirthProp = personMeta.properties.find { it.name == 'dateOfBirth' }
-        def pilotDateOfBirthProp = pilotMeta.properties.find { it.name == 'dateOfBirth' }
+        def nameProp = personMeta.properties.find { it.propertyName == 'name' }
+        def pilotNameProp = pilotMeta.properties.find { it.propertyName == 'name' }
+        def dateOfBirthProp = personMeta.properties.find { it.propertyName == 'dateOfBirth' }
+        def pilotDateOfBirthProp = pilotMeta.properties.find { it.propertyName == 'dateOfBirth' }
 
 
         then:

@@ -4,7 +4,6 @@ import com.rabbtor.gsp.config.annotation.EnableWebGsp
 import com.rabbtor.model.DefaultModelMetadataAccessorFactory
 import com.rabbtor.model.DefaultModelMetadataRegistry
 import com.rabbtor.model.ModelMetadataAccessorFactory
-import com.rabbtor.model.ModelMetadataProvider
 import com.rabbtor.model.ModelMetadataRegistry
 import com.rabbtor.validation.RabbtorOptionalValidatorFactoryBean
 import org.grails.spring.context.support.ReloadableResourceBundleMessageSource

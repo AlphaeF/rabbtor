@@ -5,32 +5,30 @@ import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.util.*;
 
-@Configuration
-public class GspConfiguration extends GrailsApplicationConfigurationSupport
+
+public abstract class GspConfigurationSupport extends GrailsApplicationConfigurationSupport
 {
 
     private static final String LOCAL_DIRECTORY_TEMPLATE_ROOT="./src/main/resources/templates/";
     private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates/";
 
 
-    @Bean
-    public GspTemplateEngineConfig gspTemplateEngineConfig() {
+
+    protected GspTemplateEngineConfig gspTemplateEngineConfig() {
         GspTemplateEngineConfig config = new GspTemplateEngineConfig();
-        overrideConfiguration(config);
+        configure(config);
         return config;
     }
 
 
 
-    protected void overrideConfiguration(GspTemplateEngineConfig config)
+    protected void configure(GspTemplateEngineConfig config)
     {
 
     }

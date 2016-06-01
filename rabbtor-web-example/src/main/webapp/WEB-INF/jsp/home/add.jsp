@@ -1,35 +1,36 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="rbbform" uri="http://rabbtor.rabbytes.com/tags/form" %>
+<%@ taglib prefix="rform" uri="http://rabbtor.rabbytes.com/tags/form" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
-<body>
+    <body>
 
-<form:form modelAttribute="addCommand" >
+        <form:form modelAttribute="registerCommand" >
 
-    <rbbform:label path="name" />
-    <form:input path="name" />
-    <form:errors path="name" />
+            <p>
+                <rform:label path="name" />
+                <form:input path="name" />
+                <form:errors path="name" />
+            </p>
 
-    <rbbform:label path="id" />
-    <form:input path="id" />
-    <form:errors path="id" />
+            <p>
+                <rform:label path="department" />
+                <form:input path="department" />
+                <form:errors path="department" />
+            </p>
 
-    <rbbform:label path="address.zipcode" />
-    <form:input path="address.zipcode" />
-    <form:errors path="address.zipcode" />
+            <h3>Addresses</h3>
+            <c:forEach items="${registerCommand.addresses}" var="address" varStatus="i" >
+                <h5>Address: ${i.index}</h5>
+                <rform:label path="addresses[${i.index}].zipcode" />
+                <form:input path="addresses[${i.index}].zipcode" />
+                <form:errors path="addresses[${i.index}].zipcode" />
+                <br />
+            </c:forEach>
 
 
+            <input type="submit" value="Submit" />
+        </form:form>
 
-
-    <c:forEach items="${addCommand.addresses}" var="address" varStatus="i" >
-        <rbbform:label path="addresses[${i.index}].zipcode" />
-        <form:input path="addresses[${i.index}].zipcode" />
-    </c:forEach>
-
-
-    <input type="submit" value="Submit" />
-</form:form>
-
-</body>
+    </body>
 </html>
