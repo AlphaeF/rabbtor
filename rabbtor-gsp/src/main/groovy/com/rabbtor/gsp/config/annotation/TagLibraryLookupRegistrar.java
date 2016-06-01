@@ -1,5 +1,6 @@
 package com.rabbtor.gsp.config.annotation;
 
+import com.rabbtor.gsp.StandaloneTagLibraryLookup;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ScannedGenericBeanDefinition;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -19,16 +21,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
+public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
 {
 
     public static final String GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME = "gspTagLibraryLookup";
-    public static final String GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME = "gspTagLibraryRegistry";
     public static final String TAG_LIBRARY_LOOKUP_BEAN_NAME = "tagLibraryLookup";
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry)
     {
+
+
 
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 importingClassMetadata.getAnnotationAttributes(getAnnotationClass().getName()));
@@ -38,6 +41,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
         Set<String> packagesToScan = getPackagesToScan(importingClassMetadata,attributes);
         Set<Class<?>> tagLibClasses = new HashSet();
 
+
         ManagedList<GenericBeanDefinition> list = new ManagedList<GenericBeanDefinition>();
         for (Class tagLibClass : tagLibClasses) {
             list.add(createBeanDefinition(tagLibClass));
@@ -45,26 +49,24 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 
         scanPackages(importingClassMetadata,registry,packagesToScan,list);
 
-        if (!registry.containsBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME)) {
+        if (!registry.containsBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME)) {
             registerBean(registry,list);
         } else {
             updateBeanDefinition(registry,list);
         }
-
     }
+
+
 
     private void updateBeanDefinition(BeanDefinitionRegistry registry, ManagedList<GenericBeanDefinition> list)
     {
-
+        if (registry.containsBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME))
+            registry.getBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME).getPropertyValues()
+                    .add("tagLibInstances",list);
+        registry.registerAlias(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME, TAG_LIBRARY_LOOKUP_BEAN_NAME);
     }
 
-    private Collection<? extends Class<?>> resolveFromTagLibRegistry(BeanDefinitionRegistry registry)
-    {
-        if (registry.containsBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME))
-            return (Collection<? extends Class<?>>) registry.getBeanDefinition(GSP_TAG_LIBRARY_REGISTRY_BEAN_NAME).getPropertyValues()
-                .get("tagLibInstances");
-        return Collections.emptySet();
-    }
+
 
 
 
@@ -85,7 +87,7 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 
     private void registerBean(BeanDefinitionRegistry registry, ManagedList<GenericBeanDefinition> list)
     {
-        GenericBeanDefinition beanDefinition = createBeanDefinition(getLookupBeanClass());
+        GenericBeanDefinition beanDefinition = createBeanDefinition(StandaloneTagLibraryLookup.class);
         beanDefinition.getPropertyValues().addPropertyValue("tagLibInstances", list);
         registry.registerBeanDefinition(GSP_TAG_LIBRARY_LOOKUP_BEAN_NAME,beanDefinition);
 
@@ -119,7 +121,20 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
     }
 
     protected ClassPathScanningCandidateComponentProvider createComponentProvider() {
-        return null;
+        ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
+                false);
+
+        try
+        {
+            Class annoClass = Class.forName("grails.gsp.TagLib");
+            componentProvider.addIncludeFilter(new AnnotationTypeFilter(annoClass));
+            return componentProvider;
+        } catch (ClassNotFoundException e)
+        {
+            return null;
+        }
+
+
     }
 
 
@@ -148,13 +163,6 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
 
 
 
-
-
-    protected void addDefaultTagLibClasses(Set<Class> tagLibClasses)
-    {
-
-    }
-
     protected GenericBeanDefinition createBeanDefinition(Class<?> beanClass)
     {
         GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
@@ -163,10 +171,10 @@ public abstract class TagLibraryLookupRegistrar implements ImportBeanDefinitionR
         return beanDefinition;
     }
 
+
+
     public Class<? extends Annotation> getAnnotationClass()
     {
         return GspTagLibScan.class;
     }
-
-    public abstract Class getLookupBeanClass();
 }

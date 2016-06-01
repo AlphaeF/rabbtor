@@ -1,9 +1,8 @@
 package com.rabbtor.gsp.config.annotation;
 
 
-import com.rabbtor.gsp.config.TagLibraryRegistry;
-import com.rabbtor.gsp.tags.ApplicationTagLib;
-import com.rabbtor.gsp.tags.FormatTagLib;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.grails.gsp.jsp.TagLibraryResolverImpl;
 import org.grails.plugins.web.taglib.RenderTagLib;
@@ -23,11 +22,16 @@ import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.ViewResolver;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 
 public abstract class WebGspConfigurationSupport extends GspConfigurationSupport implements EnvironmentAware
 {
+
+    private static Log LOG = LogFactory.getLog(WebGspConfigurationSupport.class);
 
     @Override
     protected GroovyPageLocator createGroovyPageLocator()
@@ -119,19 +123,21 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
         return defaultProperties;
     }
 
-    @Bean
-    TagLibraryRegistry gspTagLibraryRegistry() {
-        TagLibraryRegistry registry = new TagLibraryRegistry();
-        Set<Class<?>> instances = new HashSet<>();
-        instances.addAll(Arrays.asList(new Class<?>[] {ApplicationTagLib.class,
-                RenderTagLib.class, SitemeshTagLib.class, FormatTagLib.class}));
-        registerTagLibClasses(instances);
-        registry.setTagLibInstances(Arrays.asList(instances.toArray()));
-        return registry;
-    }
-
-    protected void registerTagLibClasses(Set<Class<?>> instances)
+    @Override
+    protected void registerDefaultTagLibs(Set<Class<?>> tagLibClasses)
     {
+        super.registerDefaultTagLibs(tagLibClasses);
+        tagLibClasses.add(RenderTagLib.class);
+        tagLibClasses.add(SitemeshTagLib.class);
+        try
+        {
+            tagLibClasses.add(Class.forName("com.rabbtor.gsp.tags.ApplicationTagLib"));
+            tagLibClasses.add(Class.forName("com.rabbtor.gsp.tags.FormatTagLib"));
 
+
+        } catch (ClassNotFoundException e)
+        {
+            LOG.error("Error registering standard GSP tag libraries.Could not load tag library class.",e);
+        }
     }
 }

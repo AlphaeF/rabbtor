@@ -1,11 +1,14 @@
 package com.rabbtor.gsp.config.annotation;
 
 
+import com.rabbtor.gsp.config.TagLibraryRegistry;
 import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -15,8 +18,9 @@ import java.util.*;
 public abstract class GspConfigurationSupport extends GrailsApplicationConfigurationSupport
 {
 
-    private static final String LOCAL_DIRECTORY_TEMPLATE_ROOT="./src/main/resources/templates/";
-    private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates/";
+    private static final String LOCAL_DIRECTORY_TEMPLATE_ROOT="./src/main/resources/templates";
+    private static final String WEB_INF_TEMPLATE_ROOT="/WEB-INF/templates";
+    private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates";
 
 
 
@@ -80,16 +84,16 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
         if (gspTemplateEngineConfig().templateRoots != null)
             templateRoots.addAll(Arrays.asList(gspTemplateEngineConfig().templateRoots));
 
-        addTemplateRoots(templateRoots);
+
 
         if (templateRoots.size() > 0) {
             List<String> rootPaths = new ArrayList<String>(templateRoots.size());
             for (String rootPath : templateRoots) {
                 rootPath = rootPath.trim();
                 // remove trailing slash since uri will always be prefixed with a slash
-//                if(rootPath.endsWith("/")) {
-//                    rootPath = rootPath.substring(0, rootPath.length()-1);
-//                }
+                if(rootPath.endsWith("/")) {
+                    rootPath = rootPath.substring(0, rootPath.length()-1);
+                }
                 if(!StringUtils.isEmpty(rootPath)) {
                     rootPaths.add(rootPath);
                 }
@@ -103,13 +107,33 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
                     return Collections.singletonList("file:" + LOCAL_DIRECTORY_TEMPLATE_ROOT);
                 }
             }
-            return Collections.singletonList(CLASSPATH_TEMPLATE_ROOT);
+            return Arrays.asList(new String[] { WEB_INF_TEMPLATE_ROOT, CLASSPATH_TEMPLATE_ROOT});
         }
     }
 
-    protected void addTemplateRoots(List<String> templateRoots)
-    {
+
+
+
+    @Bean
+    TagLibraryRegistry gspTagLibraryRegistry() {
+        Set<Class<?>> tagLibClasses = new HashSet<>();
+        registerDefaultTagLibs(tagLibClasses);
+        registerTagLibClasses(tagLibClasses);
+
+        TagLibraryRegistry registry = new TagLibraryRegistry();
+        registry.setTagLibInstances(tagLibClasses);
+        return registry;
     }
+
+    protected void registerTagLibClasses(Set<Class<?>> tagLibClasses)
+    {
+
+    }
+
+    protected void registerDefaultTagLibs(Set<Class<?>> tagLibClasses) {
+
+    }
+
 
     @Override
     protected void registerGrailsProperties(Set<String> grailsProperties)

@@ -2,17 +2,18 @@ package com.rabbtor.gsp.config;
 
 
 import java.util.List;
+import java.util.Set;
 
 public class TagLibraryRegistry
 {
-    private List<Class<?>> tagLibInstances;
+    private Set<Class<?>> tagLibInstances;
 
-    public List<Class<?>> getTagLibInstances()
+    public Set<Class<?>> getTagLibInstances()
     {
         return tagLibInstances;
     }
 
-    public void setTagLibInstances(List<Class<?>> tagLibInstances)
+    public void setTagLibInstances(Set<Class<?>> tagLibInstances)
     {
         this.tagLibInstances = tagLibInstances;
     }

@@ -8,7 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 public class GspTemplateEngineConfig extends AbstractGspConfig
 {
 
-    @Value("${spring.gsp.templateRoots:['/WEB-INF/gsp/']}")
+    private static final String WEB_INF_TEMPLATE_ROOT="/WEB-INF/";
+    private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates/";
+
+
+    @Value("${spring.gsp.templateRoots:}")
     String[] templateRoots;
 
     @Value("${spring.gsp.locator.cacheTimeout:5000}")
@@ -64,7 +68,6 @@ public class GspTemplateEngineConfig extends AbstractGspConfig
 
     public GspTemplateEngineConfig()
     {
-        templateRoots = new String[] {"/WEB-INF/gsp/"};
         locatorCacheTimeout = 5000;
         gspLayoutCaching = true;
         defaultLayoutName = null;

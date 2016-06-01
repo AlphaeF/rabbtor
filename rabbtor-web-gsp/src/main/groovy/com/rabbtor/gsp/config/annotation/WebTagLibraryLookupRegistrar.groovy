@@ -15,34 +15,7 @@ import java.lang.annotation.Annotation;
 @CompileStatic
 public class WebTagLibraryLookupRegistrar extends TagLibraryLookupRegistrar
 {
-    @Override
-    public Class<? extends Annotation> getAnnotationClass()
-    {
-        return EnableWebGsp.class;
-    }
 
-    @Override
-    Class getLookupBeanClass()
-    {
-        return StandaloneTagLibraryLookup.class;
-    }
 
-    @Override
-    protected ClassPathScanningCandidateComponentProvider createComponentProvider()
-    {
-        ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-                false);
 
-        componentProvider.addIncludeFilter(new AnnotationTypeFilter(TagLib.class));
-        return componentProvider;
-    }
-
-    @Override
-    protected void addDefaultTagLibClasses(Set<Class> tagLibClasses)
-    {
-        super.addDefaultTagLibClasses(tagLibClasses)
-        [ApplicationTagLib, RenderTagLib, SitemeshTagLib, FormatTagLib].each {
-            tagLibClasses.add(it)
-        }
-    }
 }
