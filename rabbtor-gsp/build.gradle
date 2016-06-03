@@ -19,5 +19,6 @@ dependencies {
         exclude group:'org.springframework.boot'
     }
 
-    compileOnly ("org.fusesource.jansi:jansi:$jansiVersion")
+    compile "commons-lang:commons-lang:${commonsLangVersion}"
+    compileOnly "org.fusesource.jansi:jansi:$jansiVersion"
 }

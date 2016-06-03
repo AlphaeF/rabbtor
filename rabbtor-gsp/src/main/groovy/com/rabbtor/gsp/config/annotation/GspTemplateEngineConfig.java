@@ -2,9 +2,7 @@ package com.rabbtor.gsp.config.annotation;
 
 import org.springframework.beans.factory.annotation.Value;
 
-/**
- * Created by Cagatay on 29.05.2016.
- */
+
 public class GspTemplateEngineConfig extends AbstractGspConfig
 {
 

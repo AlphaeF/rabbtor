@@ -1,7 +1,9 @@
-package com.rabbtor.gsp;
+package com.rabbtor.gsp.taglib;
 
-import com.rabbtor.gsp.config.TagLibraryRegistry;
+import com.rabbtor.gsp.taglib.config.annotation.TagLibraryRegistry;
 import grails.core.GrailsTagLibClass;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.grails.core.DefaultGrailsTagLibClass;
 import org.grails.taglib.TagLibraryLookup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,9 @@ import java.util.*;
 
 public class StandaloneTagLibraryLookup extends TagLibraryLookup implements ApplicationListener<ContextRefreshedEvent>
 {
+
+    private static Log LOG = LogFactory.getLog(StandaloneTagLibraryLookup.class);
+
     Set<Object> tagLibInstancesSet;
 
     @Autowired(required = false)
@@ -89,7 +94,7 @@ public class StandaloneTagLibraryLookup extends TagLibraryLookup implements Appl
                 }
             } catch (ClassNotFoundException e)
             {
-
+                LOG.warn("grails.gsp.TagLib class was not found in classpath. Resolution of tag libraries annotated with this annotation is disabled.",e);
             }
 
         }

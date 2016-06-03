@@ -1,6 +1,6 @@
-package com.rabbtor.gsp.config.annotation;
+package com.rabbtor.gsp.taglib.config.annotation;
 
-import com.rabbtor.gsp.StandaloneTagLibraryLookup;
+import com.rabbtor.gsp.taglib.StandaloneTagLibraryLookup;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -18,7 +18,6 @@ import org.springframework.util.ObjectUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
@@ -145,7 +144,7 @@ public class TagLibraryLookupRegistrar implements ImportBeanDefinitionRegistrar
         Class<?>[] basePackageClasses = attributes.getClassArray("basePackageClasses");
         if (!ObjectUtils.isEmpty(value)) {
             Assert.state(ObjectUtils.isEmpty(basePackages),
-                    "@ServletComponentScan basePackages and value attributes are"
+                    "@GspTagLibScan basePackages and value attributes are"
                             + " mutually exclusive");
         }
         Set<String> packagesToScan = new LinkedHashSet<String>();

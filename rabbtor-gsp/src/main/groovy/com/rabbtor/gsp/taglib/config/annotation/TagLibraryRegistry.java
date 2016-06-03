@@ -1,7 +1,6 @@
-package com.rabbtor.gsp.config;
+package com.rabbtor.gsp.taglib.config.annotation;
 
 
-import java.util.List;
 import java.util.Set;
 
 public class TagLibraryRegistry

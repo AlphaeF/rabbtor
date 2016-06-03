@@ -193,13 +193,10 @@ subprojects { project ->
         compile groovyDependency
 
         provided("org.springframework:spring-core:${springVersion}") {
-            exclude group: 'commons-logging', module:'commons-logging'
         }
         provided("org.springframework:spring-beans:${springVersion}") {
-            exclude group: 'commons-logging', module:'commons-logging'
         }
         provided("org.springframework:spring-context:${springVersion}") {
-            exclude group: 'commons-logging', module:'commons-logging'
         }
 
 

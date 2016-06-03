@@ -1,7 +1,7 @@
 package com.rabbtor.example.web
 
 import com.rabbtor.gsp.config.annotation.EnableWebGsp
-import com.rabbtor.gsp.config.annotation.GspTagLibScan
+import com.rabbtor.gsp.taglib.config.annotation.GspTagLibScan
 import com.rabbtor.model.DefaultModelMetadataAccessorFactory
 import com.rabbtor.model.DefaultModelMetadataRegistry
 import com.rabbtor.model.ModelMetadataAccessorFactory

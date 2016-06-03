@@ -4,7 +4,6 @@ package com.rabbtor.gsp.config.annotation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.grails.gsp.io.GroovyPageLocator;
-import org.grails.gsp.jsp.TagLibraryResolverImpl;
 import org.grails.plugins.web.taglib.RenderTagLib;
 import org.grails.plugins.web.taglib.SitemeshTagLib;
 import org.grails.web.gsp.io.CachingGrailsConventionGroovyPageLocator;
@@ -12,23 +11,16 @@ import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
 import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
-import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertiesPropertySource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.ViewResolver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 
-public abstract class WebGspConfigurationSupport extends GspConfigurationSupport implements EnvironmentAware
+public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
 {
 
     private static Log LOG = LogFactory.getLog(WebGspConfigurationSupport.class);
@@ -63,7 +55,6 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
 
 
     @Bean
-    @Conditional(GspEnabledCondition.class)
     public GroovyPageLayoutFinder groovyPageLayoutFinder() {
         GroovyPageLayoutFinder groovyPageLayoutFinder = new GroovyPageLayoutFinder();
         groovyPageLayoutFinder.setGspReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
@@ -74,7 +65,6 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
     }
 
     @Bean
-    @Conditional(GspEnabledCondition.class)
     public GrailsLayoutViewResolver gspViewResolver() {
         return new GrailsLayoutViewResolver(innerGspViewResolver(), groovyPageLayoutFinder());
     }
@@ -87,41 +77,6 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
         return innerGspViewResolver;
     }
 
-    @Bean(autowire = Autowire.BY_NAME)
-    public TagLibraryResolverImpl jspTagLibraryResolver()
-    {
-
-        return new TagLibraryResolverImpl();
-    }
-
-    @Override
-    public void setEnvironment(Environment environment)
-    {
-        if (environment instanceof ConfigurableEnvironment)
-        {
-            ConfigurableEnvironment configEnv = (ConfigurableEnvironment) environment;
-            if (!environment.containsProperty("spring.gsp.tldScanPattern")) {
-                Properties defaultProperties = createDefaultProperties();
-                configEnv.getPropertySources().addLast(new PropertiesPropertySource(GspJspConfiguration.class.getName(), defaultProperties));
-            }
-        }
-    }
-
-    @Override
-    protected void registerGrailsProperties(Set<String> grailsProperties)
-    {
-        super.registerGrailsProperties(grailsProperties);
-
-    }
-
-    protected Properties createDefaultProperties()
-    {
-        Properties defaultProperties = new Properties();
-        // scan for spring JSP taglib tld files by default, also scan for
-        defaultProperties.put("spring.gsp.tldScanPattern",
-                "classpath*:/META-INF/spring*.tld,classpath*:/META-INF/fmt.tld,classpath*:/META-INF/c.tld,classpath*:/META-INF/rabbtor*.tld,classpath*:/META-INF/c-1_0-rt.tld");
-        return defaultProperties;
-    }
 
     @Override
     protected void registerDefaultTagLibs(Set<Class<?>> tagLibClasses)
@@ -137,7 +92,9 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
 
         } catch (ClassNotFoundException e)
         {
-            LOG.error("Error registering standard GSP tag libraries.Could not load tag library class.",e);
+            LOG.warn("Error registering Rabbtor's standard GSP tag libraries.Could not load tag library class.",e);
         }
     }
+
+
 }

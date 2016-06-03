@@ -1,14 +1,12 @@
 package com.rabbtor.gsp.config.annotation;
 
 
-import com.rabbtor.gsp.config.TagLibraryRegistry;
+import com.rabbtor.gsp.taglib.config.annotation.TagLibraryRegistry;
 import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -26,13 +24,13 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
 
     protected GspTemplateEngineConfig gspTemplateEngineConfig() {
         GspTemplateEngineConfig config = new GspTemplateEngineConfig();
-        configure(config);
+        configureGsp(config);
         return config;
     }
 
 
 
-    protected void configure(GspTemplateEngineConfig config)
+    protected void configureGsp(GspTemplateEngineConfig config)
     {
 
     }

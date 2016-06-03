@@ -1,50 +1,38 @@
 package com.rabbtor.gsp.config.annotation;
 
 
-import org.grails.gsp.jsp.TagLibraryResolver;
-import org.grails.gsp.jsp.TagLibraryResolverImpl;
-import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import java.util.Properties;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @Conditional(JspCondition.class)
-public class GspJspConfiguration implements EnvironmentAware
+public class GspJspConfiguration extends GspJspConfigurationSupport
 {
-    @Bean(autowire = Autowire.BY_NAME)
-    public TagLibraryResolverImpl jspTagLibraryResolver()
+    private List<WebGspConfigurer> configurers;
+
+    @Autowired(required = false)
+    public void setConfigurers(List<WebGspConfigurer> configurers)
     {
-        return new TagLibraryResolverImpl();
+        if (configurers == null)
+            this.configurers = Collections.emptyList();
+        else
+            this.configurers = configurers;
+
+        if (this.configurers.size() > 0)
+            AnnotationAwareOrderComparator.sort(this.configurers);
     }
 
     @Override
-    public void setEnvironment(Environment environment)
+    protected void registerTldScanPaths(List<String> paths)
     {
-        if (environment instanceof ConfigurableEnvironment)
-        {
-            ConfigurableEnvironment configEnv = (ConfigurableEnvironment) environment;
-            if (!environment.containsProperty("spring.gsp.tldScanPattern")) {
-
-                Properties defaultProperties = createDefaultProperties();
-                configEnv.getPropertySources().addLast(new PropertiesPropertySource(GspJspConfiguration.class.getName(), defaultProperties));
-            }
+        super.registerTldScanPaths(paths);
+        for (WebGspConfigurer configurer : configurers) {
+            configurer.registerTldScanPaths(paths);
         }
-    }
-
-    protected Properties createDefaultProperties()
-    {
-        Properties defaultProperties = new Properties();
-        // scan for spring JSP taglib tld files by default, also scan for
-        defaultProperties.put("spring.gsp.tldScanPattern",
-                "classpath*:/META-INF/spring*.tld,classpath*:/META-INF/fmt.tld,classpath*:/META-INF/c.tld,classpath*:/META-INF/rabbtor*.tld,classpath*:/META-INF/c-1_0-rt.tld");
-        return defaultProperties;
     }
 }
