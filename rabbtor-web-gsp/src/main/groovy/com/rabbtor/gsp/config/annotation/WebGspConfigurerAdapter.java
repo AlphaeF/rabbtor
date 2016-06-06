@@ -1,3 +1,4 @@
+
 package com.rabbtor.gsp.config.annotation;
 
 
@@ -7,7 +8,7 @@ import java.util.Set;
 public class WebGspConfigurerAdapter implements WebGspConfigurer
 {
     @Override
-    public void configureGsp(GspTemplateEngineConfig config)
+    public void configureGsp(WebGspSettings config)
     {
 
     }

@@ -1,15 +1,18 @@
+
 package com.rabbtor.gsp.config.annotation;
 
 
 import com.rabbtor.gsp.jsp.TagLibraryResolverImpl;
 import org.springframework.beans.factory.annotation.Autowire;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 
-public abstract class GspJspConfigurationSupport implements EnvironmentAware
+public abstract class GspJspConfigurationSupport
 {
     @Bean(autowire = Autowire.BY_NAME)
     public TagLibraryResolverImpl jspTagLibraryResolver()

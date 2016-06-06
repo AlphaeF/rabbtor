@@ -1,8 +1,7 @@
+
 package com.rabbtor.model;
 
 
-import com.rabbtor.model.annotation.AnnotationBeanPropertyMetadata;
-import com.rabbtor.util.RabbtorBeanUtils;
 import org.springframework.core.convert.Property;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.util.ReflectionUtils;
@@ -11,6 +10,7 @@ import org.springframework.util.StringUtils;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public abstract class AbstractModelPropertyMetadata implements ModelPropertyMetadata
@@ -125,7 +125,21 @@ public abstract class AbstractModelPropertyMetadata implements ModelPropertyMeta
 
     protected Type resolveGenericCompontentType()
     {
-        return RabbtorBeanUtils.resolveComponentTypeOfProperty(propertyDescriptor,typeDescriptor);
+        Method read = propertyDescriptor.getReadMethod();
+        Method write = propertyDescriptor.getWriteMethod();
+
+        ParameterizedType parameterizedType = null;
+        if (read != null)
+            parameterizedType =(ParameterizedType)read.getGenericReturnType();
+        else
+            parameterizedType = (ParameterizedType)write.getGenericParameterTypes()[0];
+
+        if (typeDescriptor.isCollection() || typeDescriptor.isArray())
+            return parameterizedType.getActualTypeArguments()[0];
+        if (typeDescriptor.isMap())
+            return parameterizedType.getActualTypeArguments()[1];
+
+        throw new UnsupportedOperationException(String.format("Component type of property could not be resolved for property: %s and type descriptor: %s", propertyDescriptor, typeDescriptor));
     }
 
     @Override

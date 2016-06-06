@@ -1,3 +1,4 @@
+
 package com.rabbtor.gsp.config.annotation;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +37,7 @@ public class WebGspConfiguration extends WebGspConfigurationSupport
     }
 
     @Override
-    protected void configureGsp(GspTemplateEngineConfig config)
+    protected void configureGsp(WebGspSettings config)
     {
         super.configureGsp(config);
         for (WebGspConfigurer configurer : configurers) {

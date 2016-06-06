@@ -1,5 +1,5 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="rbbform" uri="http://rabbtor.rabbytes.com/tags/form" %>
+<%@ taglib prefix="rbbform" uri="http://rabbytes.com/rabbtor/tags/form" %>
 <html>
     <body>
 

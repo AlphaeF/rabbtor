@@ -1,3 +1,4 @@
+
 package com.rabbtor.gsp.util
 
 import groovy.transform.CompileStatic

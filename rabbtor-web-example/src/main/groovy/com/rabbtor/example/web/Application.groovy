@@ -1,3 +1,4 @@
+
 package com.rabbtor.example.web
 
 import com.rabbtor.gsp.config.annotation.EnableWebGsp

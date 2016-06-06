@@ -1,3 +1,4 @@
+
 package com.rabbtor.validation
 
 import spock.lang.Specification

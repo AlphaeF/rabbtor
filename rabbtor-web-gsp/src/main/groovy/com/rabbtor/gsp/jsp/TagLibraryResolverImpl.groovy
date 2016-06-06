@@ -1,27 +1,18 @@
-package com.rabbtor.gsp.jsp;
 
+package com.rabbtor.gsp.jsp
 
-import grails.core.GrailsApplication;
-import org.grails.gsp.jsp.JspTagLib
-import org.grails.gsp.jsp.JspTagLibImpl;
-import org.grails.gsp.jsp.TagLibraryResolver
-import org.grails.gsp.jsp.TldReader
-import org.grails.gsp.jsp.WebXmlTagLibraryReader;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import grails.core.GrailsApplication
+import org.grails.gsp.jsp.*
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.io.Resource
+import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
 import org.springframework.web.context.support.ServletContextResource
 
-import javax.servlet.ServletContext;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import javax.servlet.ServletContext
+import java.util.concurrent.ConcurrentHashMap
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 
 public class TagLibraryResolverImpl implements TagLibraryResolver
 {
@@ -151,7 +142,7 @@ public class TagLibraryResolverImpl implements TagLibraryResolver
         }
     }
 
-    @Override
+
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader
     }

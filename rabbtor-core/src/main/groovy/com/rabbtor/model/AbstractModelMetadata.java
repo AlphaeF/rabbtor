@@ -1,7 +1,8 @@
+
 package com.rabbtor.model;
 
 
-import com.rabbtor.model.annotation.AnnotationBeanPropertyMetadata;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -47,13 +48,15 @@ public abstract class AbstractModelMetadata implements ModelMetadata
                 if (pd.getName().equalsIgnoreCase("class"))
                     continue;
 
-                ModelPropertyMetadata metadata = new AnnotationBeanPropertyMetadata(this,getMetadataProvider(),pd);
+                ModelPropertyMetadata metadata = createPropertyMetadata(pd);
                 properties.add(metadata);
             }
         }
         properties = Collections.unmodifiableSet(properties);
         return properties;
     }
+
+    protected abstract ModelPropertyMetadata createPropertyMetadata(PropertyDescriptor pd);
 
     @Override
     public String getModelName()

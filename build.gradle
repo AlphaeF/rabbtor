@@ -20,7 +20,12 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.github.hierynomus.license" version "0.13.0"
+}
+
 apply plugin: 'idea'
+
 
 ext {
     bintrayPublish = true
@@ -107,12 +112,22 @@ ext.groovyDependency = dependencies.create("org.codehaus.groovy:groovy:${groovyV
 
 allprojects {
 
+    apply plugin: 'license'
+
+    license {
+        header rootProject.file('LICENSE')
+        ext.year = Calendar.getInstance().get(Calendar.YEAR)
+        ext.name = 'Rabbytes Incorporated'
+        ext.email = 'info@rabbytes.com'
+    }
 
     if (JavaVersion.current().isJava8Compatible()) {
         tasks.withType(Javadoc) {
             options.addStringOption('Xdoclint:none', '-quiet')
         }
     }
+
+
 }
 
 subprojects { project ->
@@ -124,7 +139,7 @@ subprojects { project ->
     ext.pomInfo = {
         delegate.name 'Rabbtor'
         delegate.description 'Rabbtor Spring Extensions'
-        delegate.url 'http://rabbtor.com/'
+        delegate.url 'http://rabbytes.com/rabbtor'
 
 //        delegate.licenses {
 //            delegate.license {
@@ -142,8 +157,8 @@ subprojects { project ->
 
         delegate.developers {
             delegate.developer {
-                delegate.id 'cagataykalan'
-                delegate.name 'Cagatay Kalan'
+                delegate.id 'rabbytes'
+                delegate.name 'Rabbytes Team'
             }
         }
 
@@ -326,12 +341,12 @@ subprojects { project ->
                 maven(MavenPublication) {
                     from components.java
 
-                    artifact sourcesJar {
-                        classifier "sources"
-                    }
-                    artifact javadocJar {
-                        classifier "javadoc"
-                    }
+//                    artifact sourcesJar {
+//                        classifier "sources"
+//                    }
+//                    artifact javadocJar {
+//                        classifier "javadoc"
+//                    }
 
                     pom.withXml {
                         def xml = asNode()
@@ -406,3 +421,4 @@ subprojects { project ->
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
+

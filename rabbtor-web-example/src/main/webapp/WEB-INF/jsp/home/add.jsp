@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
-<%@ taglib prefix="rform" uri="http://rabbtor.rabbytes.com/tags/form" %>
+<%@ taglib prefix="rform" uri="http://rabbytes.com/rabbtor/tags/form" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <html>
     <body>

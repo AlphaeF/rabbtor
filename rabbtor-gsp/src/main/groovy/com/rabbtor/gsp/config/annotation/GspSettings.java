@@ -1,26 +1,28 @@
+
 package com.rabbtor.gsp.config.annotation;
 
-import org.springframework.beans.factory.annotation.Value;
-
-
-public class GspTemplateEngineConfig extends AbstractGspConfig
+public abstract class GspSettings
 {
 
-    private static final String WEB_INF_TEMPLATE_ROOT="/WEB-INF/";
-    private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates/";
+    boolean gspReloadingEnabled;
 
-
-    @Value("${spring.gsp.templateRoots:}")
-    String[] templateRoots;
-
-    @Value("${spring.gsp.locator.cacheTimeout:5000}")
     long locatorCacheTimeout;
 
-    @Value("${spring.gsp.layout.caching:true}")
     boolean gspLayoutCaching;
 
-    @Value("${spring.gsp.layout.default:#{null}")
     String defaultLayoutName;
+
+    String[] templateRoots;
+
+    public boolean isGspReloadingEnabled()
+    {
+        return gspReloadingEnabled;
+    }
+
+    public void setGspReloadingEnabled(boolean gspReloadingEnabled)
+    {
+        this.gspReloadingEnabled = gspReloadingEnabled;
+    }
 
 
 
@@ -64,10 +66,14 @@ public class GspTemplateEngineConfig extends AbstractGspConfig
         this.defaultLayoutName = defaultLayoutName;
     }
 
-    public GspTemplateEngineConfig()
+
+
+    protected GspSettings()
     {
         locatorCacheTimeout = 5000;
         gspLayoutCaching = true;
         defaultLayoutName = null;
+        gspReloadingEnabled = true;
+
     }
 }

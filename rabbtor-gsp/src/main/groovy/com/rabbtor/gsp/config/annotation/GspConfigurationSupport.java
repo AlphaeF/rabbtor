@@ -1,3 +1,4 @@
+
 package com.rabbtor.gsp.config.annotation;
 
 
@@ -22,15 +23,15 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
 
 
 
-    protected GspTemplateEngineConfig gspTemplateEngineConfig() {
-        GspTemplateEngineConfig config = new GspTemplateEngineConfig();
+    protected WebGspSettings gspTemplateEngineConfig() {
+        WebGspSettings config = new WebGspSettings();
         configureGsp(config);
         return config;
     }
 
 
 
-    protected void configureGsp(GspTemplateEngineConfig config)
+    protected void configureGsp(WebGspSettings config)
     {
 
     }

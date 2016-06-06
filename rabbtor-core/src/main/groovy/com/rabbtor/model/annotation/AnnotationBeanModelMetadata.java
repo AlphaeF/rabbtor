@@ -1,15 +1,13 @@
+
 package com.rabbtor.model.annotation;
 
 
 import com.rabbtor.model.AbstractModelMetadata;
-import com.rabbtor.model.ModelMetadata;
 import com.rabbtor.model.ModelMetadataProvider;
 import com.rabbtor.model.ModelPropertyMetadata;
-import org.springframework.beans.BeanUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 
 import java.beans.PropertyDescriptor;
-import java.util.*;
 
 public class AnnotationBeanModelMetadata extends AbstractModelMetadata
 {
@@ -20,6 +18,12 @@ public class AnnotationBeanModelMetadata extends AbstractModelMetadata
     {
         super(metadataProvider, modelType);
 
+    }
+
+    @Override
+    protected ModelPropertyMetadata createPropertyMetadata(PropertyDescriptor pd)
+    {
+        return new AnnotationBeanPropertyMetadata(this,getMetadataProvider(),pd);
     }
 
     protected String resolveName()

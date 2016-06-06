@@ -1,3 +1,4 @@
+
 package com.rabbtor.example.web.models
 
 import com.rabbtor.model.annotation.Model
