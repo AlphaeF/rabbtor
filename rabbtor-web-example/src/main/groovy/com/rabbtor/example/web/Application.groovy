@@ -15,6 +15,8 @@
 package com.rabbtor.example.web
 
 import com.rabbtor.gsp.config.annotation.EnableWebGsp
+import com.rabbtor.gsp.config.annotation.GspSettings
+import com.rabbtor.gsp.config.annotation.WebGspConfigurerAdapter
 import com.rabbtor.gsp.taglib.config.annotation.GspTagLibScan
 import com.rabbtor.model.DefaultModelMetadataAccessorFactory
 import com.rabbtor.model.DefaultModelMetadataRegistry
@@ -28,6 +30,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration
 import org.springframework.context.MessageSource
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.validation.Validator
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
@@ -65,5 +68,14 @@ class Application extends WebMvcConfigurerAdapter
     @Bean
     ModelMetadataRegistry modelMetadataRegistry() {
         return new DefaultModelMetadataRegistry()
+    }
+
+    @Configuration
+    public static class GspConfig extends WebGspConfigurerAdapter {
+        @Override
+        void configureGsp(GspSettings config)
+        {
+            config.gspReloadingEnabled = false
+        }
     }
 }

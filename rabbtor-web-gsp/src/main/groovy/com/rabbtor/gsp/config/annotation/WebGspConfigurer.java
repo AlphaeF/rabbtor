@@ -19,7 +19,7 @@ import java.util.Set;
 
 public interface WebGspConfigurer
 {
-    void configureGsp(WebGspSettings config);
+    void configureGsp(GspSettings config);
 
     void registerGspTagLibraries(Set<Class<?>> tagLibRegistry);
 

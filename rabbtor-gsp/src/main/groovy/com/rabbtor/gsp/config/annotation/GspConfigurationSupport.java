@@ -34,17 +34,20 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
     private static final String WEB_INF_TEMPLATE_ROOT="/WEB-INF/templates";
     private static final String CLASSPATH_TEMPLATE_ROOT="classpath:/templates";
 
+    private GspSettings gspSettings = null;
 
 
-    protected WebGspSettings gspTemplateEngineConfig() {
-        WebGspSettings config = new WebGspSettings();
-        configureGsp(config);
-        return config;
+
+    protected GspSettings gspTemplateEngineConfig() {
+        if (gspSettings == null)
+            gspSettings = new GspSettings();
+        configureGsp(gspSettings);
+        return gspSettings;
     }
 
 
 
-    protected void configureGsp(WebGspSettings config)
+    protected void configureGsp(GspSettings config)
     {
 
     }

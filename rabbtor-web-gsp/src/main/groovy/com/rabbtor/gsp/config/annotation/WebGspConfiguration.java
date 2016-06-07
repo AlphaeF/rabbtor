@@ -50,7 +50,7 @@ public class WebGspConfiguration extends WebGspConfigurationSupport
     }
 
     @Override
-    protected void configureGsp(WebGspSettings config)
+    protected void configureGsp(GspSettings config)
     {
         super.configureGsp(config);
         for (WebGspConfigurer configurer : configurers) {

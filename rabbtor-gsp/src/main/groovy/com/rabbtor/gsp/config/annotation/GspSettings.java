@@ -14,7 +14,7 @@
  */
 package com.rabbtor.gsp.config.annotation;
 
-public abstract class GspSettings
+public class GspSettings
 {
 
     boolean gspReloadingEnabled;
@@ -26,6 +26,8 @@ public abstract class GspSettings
     String defaultLayoutName;
 
     String[] templateRoots;
+
+    long viewCacheTimeout;
 
     public boolean isGspReloadingEnabled()
     {
@@ -81,12 +83,24 @@ public abstract class GspSettings
 
 
 
+    public long getViewCacheTimeout()
+    {
+        return viewCacheTimeout;
+    }
+
+    public void setViewCacheTimeout(long viewCacheTimeout)
+    {
+        this.viewCacheTimeout = viewCacheTimeout;
+    }
+
+
     protected GspSettings()
     {
         locatorCacheTimeout = 5000;
         gspLayoutCaching = true;
         defaultLayoutName = null;
         gspReloadingEnabled = true;
+        viewCacheTimeout = 1000;
 
     }
 }

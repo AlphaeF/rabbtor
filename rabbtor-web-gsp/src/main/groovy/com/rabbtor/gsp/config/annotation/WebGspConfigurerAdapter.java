@@ -21,7 +21,7 @@ import java.util.Set;
 public class WebGspConfigurerAdapter implements WebGspConfigurer
 {
     @Override
-    public void configureGsp(WebGspSettings config)
+    public void configureGsp(GspSettings config)
     {
 
     }
