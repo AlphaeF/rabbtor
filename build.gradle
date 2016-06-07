@@ -115,10 +115,16 @@ allprojects {
     apply plugin: 'license'
 
     license {
-        header rootProject.file('LICENSE')
+        header rootProject.file('LICENSE.txt')
         ext.year = Calendar.getInstance().get(Calendar.YEAR)
         ext.name = 'Rabbytes Incorporated'
         ext.email = 'info@rabbytes.com'
+        excludes (['**/org/grails/**', '**/StreamByteBuffer.*',
+                   '**/StandaloneTagLibraryLookup.*',
+                   '**/TagLibraryLookupRegistrar.*',
+                   '**/ResponseIncludeWrapper.*',
+                   '**/RequestIncludeHelper.*'
+        ])
     }
 
     if (JavaVersion.current().isJava8Compatible()) {
@@ -126,6 +132,9 @@ allprojects {
             options.addStringOption('Xdoclint:none', '-quiet')
         }
     }
+
+
+
 
 
 }
@@ -183,6 +192,7 @@ subprojects { project ->
     apply plugin: 'provided-base'
     apply plugin: 'optional-base'
 
+
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
 
@@ -192,6 +202,8 @@ subprojects { project ->
         mavenLocal()
         jcenter()
     }
+
+
 
     configure([compileGroovy, compileTestGroovy]) {
         groovyOptions.fork(jvmArgs: ['-XX:MaxPermSize=512m'], memoryInitialSize: '128M', memoryMaximumSize: '1G')
@@ -271,6 +283,8 @@ subprojects { project ->
             }
 
         }
+
+
     }
 
     test {
@@ -421,4 +435,7 @@ subprojects { project ->
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
+
+
+
 
