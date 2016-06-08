@@ -20,7 +20,7 @@
         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
         version="2.0">
 
-    <description>Rabbtor Framework JSP Tag Library</description>
+    <description>Rabbtor Framework JSP Form Tag Library</description>
     <tlib-version>1.0</tlib-version>
     <short-name>form</short-name>
     <uri>http://rabbytes.com/rabbtor/tags/form</uri>

@@ -25,11 +25,16 @@ import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
 import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.ViewResolver;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -92,23 +97,9 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
     }
 
 
-    @Override
-    protected void registerDefaultTagLibs(Set<Class<?>> tagLibClasses)
-    {
-        super.registerDefaultTagLibs(tagLibClasses);
-        tagLibClasses.add(RenderTagLib.class);
-        tagLibClasses.add(SitemeshTagLib.class);
-        try
-        {
-            tagLibClasses.add(Class.forName("com.rabbtor.gsp.tags.ApplicationTagLib"));
-            tagLibClasses.add(Class.forName("com.rabbtor.gsp.tags.FormatTagLib"));
 
 
-        } catch (ClassNotFoundException e)
-        {
-            LOG.warn("Error registering Rabbtor's standard GSP tag libraries.Could not load tag library class.",e);
-        }
-    }
+
 
 
 }

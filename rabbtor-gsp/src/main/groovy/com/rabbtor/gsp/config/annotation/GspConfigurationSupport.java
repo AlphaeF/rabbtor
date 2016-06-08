@@ -15,7 +15,7 @@
 package com.rabbtor.gsp.config.annotation;
 
 
-import com.rabbtor.gsp.taglib.config.annotation.TagLibraryRegistry;
+
 import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.DefaultGroovyPageLocator;
 import org.grails.gsp.io.GroovyPageLocator;
@@ -40,8 +40,10 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
 
     protected GspSettings gspTemplateEngineConfig() {
         if (gspSettings == null)
+        {
             gspSettings = new GspSettings();
-        configureGsp(gspSettings);
+            configureGsp(gspSettings);
+        }
         return gspSettings;
     }
 
@@ -126,28 +128,6 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
         }
     }
 
-
-
-
-    @Bean
-    TagLibraryRegistry gspTagLibraryRegistry() {
-        Set<Class<?>> tagLibClasses = new HashSet<>();
-        registerDefaultTagLibs(tagLibClasses);
-        registerTagLibClasses(tagLibClasses);
-
-        TagLibraryRegistry registry = new TagLibraryRegistry();
-        registry.setTagLibInstances(tagLibClasses);
-        return registry;
-    }
-
-    protected void registerTagLibClasses(Set<Class<?>> tagLibClasses)
-    {
-
-    }
-
-    protected void registerDefaultTagLibs(Set<Class<?>> tagLibClasses) {
-
-    }
 
 
     @Override

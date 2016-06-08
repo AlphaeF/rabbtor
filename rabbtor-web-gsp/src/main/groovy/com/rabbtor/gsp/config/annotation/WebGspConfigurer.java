@@ -21,8 +21,6 @@ public interface WebGspConfigurer
 {
     void configureGsp(GspSettings config);
 
-    void registerGspTagLibraries(Set<Class<?>> tagLibRegistry);
-
     void registerTldScanPaths(List<String> scanPaths);
 
 }

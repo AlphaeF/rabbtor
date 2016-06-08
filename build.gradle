@@ -112,28 +112,13 @@ ext.groovyDependency = dependencies.create("org.codehaus.groovy:groovy:${groovyV
 
 allprojects {
 
-    apply plugin: 'license'
 
-    license {
-        header rootProject.file('LICENSE.txt')
-        ext.year = Calendar.getInstance().get(Calendar.YEAR)
-        ext.name = 'Rabbytes Incorporated'
-        ext.email = 'info@rabbytes.com'
-        excludes (['**/org/grails/**', '**/StreamByteBuffer.*',
-                   '**/StandaloneTagLibraryLookup.*',
-                   '**/TagLibraryLookupRegistrar.*',
-                   '**/ResponseIncludeWrapper.*',
-                   '**/RequestIncludeHelper.*',
-                   '/*.txt'
-        ])
-    }
-
-    if (JavaVersion.current().isJava8Compatible()) {
+    if (JavaVersion.current().isJava8Compatible())
+    {
         tasks.withType(Javadoc) {
             options.addStringOption('Xdoclint:none', '-quiet')
         }
     }
-
 
 
 }
@@ -158,8 +143,29 @@ subprojects { project ->
 
     }
 
-    if (project.name  == 'rabbtor-web-example')
+    if (project.name == 'rabbtor-web-example')
         return
+
+    apply plugin: 'license'
+
+    license {
+        header rootProject.file('LICENSE.txt')
+        ext.year = Calendar.getInstance().get(Calendar.YEAR)
+        ext.name = 'Rabbytes Incorporated'
+        ext.email = 'info@rabbytes.com'
+        excludes([
+                '**/*.txt',
+                '**/*.tld',
+                '**/*.properties',
+                '**/*.xml',
+                '**/org/grails/**',
+                '**/StreamByteBuffer.*',
+                '**/StandaloneTagLibraryLookup.*',
+                '**/TagLibraryLookupRegistrar.*',
+                '**/ResponseIncludeWrapper.*',
+                '**/RequestIncludeHelper.*'
+        ])
+    }
 
 
     apply plugin: 'groovy'
@@ -181,8 +187,8 @@ subprojects { project ->
     targetCompatibility = "1.8"
 
     repositories {
-        maven { url  "http://rabbytes.bintray.com/maven" }
-        maven { url  "http://repo.grails.org/grails/grails-core" }
+        maven { url "http://rabbytes.bintray.com/maven" }
+        maven { url "http://repo.grails.org/grails/grails-core" }
         mavenLocal()
         jcenter()
     }
@@ -207,14 +213,15 @@ subprojects { project ->
 //        }
 //    }
 
-    task copyResources(type: Copy) {
-        println "copy resources to ${sourceSets.main.output.resourcesDir}"
-        from ('../') {
-            include 'LICENSE**'
-            include 'NOTICE**'
+    jar.doFirst {
+        def target = "${sourceSets.main.output.resourcesDir}/META-INF"
+        copy {
+            from('../') {
+                include 'LICENSE**'
+                include 'NOTICE**'
+            }
+            into target
         }
-        into sourceSets.main.output.resourcesDir
-
     }
 
 
@@ -246,11 +253,12 @@ subprojects { project ->
             exclude group: 'org.hamcrest', module: 'hamcrest-core'
         }
 
-        if(project.name =~ /^(rabbtor-web|rabbtor-test-suite|rabbtor-test)/) {
+        if (project.name =~ /^(rabbtor-web|rabbtor-test-suite|rabbtor-test)/)
+        {
             dependencies {
                 compileOnly "javax.servlet:javax.servlet-api:$servletApiVersion"
                 // MockHttpServletRequest/Response/Context used in many classes
-                compileOnly ("org.springframework:spring-test:${springVersion}") {
+                compileOnly("org.springframework:spring-test:${springVersion}") {
                     exclude group: 'org.codehaus.groovy', module: 'groovy'
                 }
             }
@@ -271,17 +279,17 @@ subprojects { project ->
             testCompile "org.objenesis:objenesis:${objenesisVersion}"
 
             testCompile "javax.validation:validation-api:${validationApiVersion}"
-            testCompile ("org.springframework.boot:spring-boot:${springBootVersion}")
-            testCompile ("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}") {
+            testCompile("org.springframework.boot:spring-boot:${springBootVersion}")
+            testCompile("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}") {
                 exclude group: 'org.codehaus.groovy', module: 'groovy'
             }
-            testCompile ("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
-            testCompile ("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
-            testCompile ("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
-                exclude group:'junit'
+            testCompile("org.springframework.boot:spring-boot-starter-tomcat:${springBootVersion}")
+            testCompile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}")
+            testCompile("org.springframework.boot:spring-boot-starter-test:${springBootVersion}") {
+                exclude group: 'junit'
             }
 
-            testCompile ("org.spockframework:spock-spring:${spockVersion}") {
+            testCompile("org.spockframework:spock-spring:${spockVersion}") {
                 exclude group: 'junit', module: 'junit-dep'
                 exclude group: 'org.codehaus.groovy', module: 'groovy-all'
             }
@@ -319,7 +327,8 @@ subprojects { project ->
         }
     }
 
-    if(!isTestSuite && !isExample) {
+    if (!isTestSuite && !isExample)
+    {
 
         modifyPom {
             delegate.project {
@@ -346,10 +355,11 @@ subprojects { project ->
                         username = u
                         password = p
                     }
-                    if(isBuildSnapshot) {
-                        url  "https://rabbytes.bintray.com/maven-snapshots-local"
-                    }
-                    else {
+                    if (isBuildSnapshot)
+                    {
+                        url "https://rabbytes.bintray.com/maven-snapshots-local"
+                    } else
+                    {
                         url "http://rabbytes.bintray.com/maven-releases-local"
                     }
                 }

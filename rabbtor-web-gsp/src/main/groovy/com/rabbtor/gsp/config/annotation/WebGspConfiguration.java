@@ -39,22 +39,18 @@ public class WebGspConfiguration extends WebGspConfigurationSupport
             AnnotationAwareOrderComparator.sort(this.configurers);
     }
 
-    @Override
-    protected void registerTagLibClasses(Set<Class<?>> tagLibClasses)
-    {
-        super.registerTagLibClasses(tagLibClasses);
-        for (WebGspConfigurer configurer : configurers) {
-            configurer.registerGspTagLibraries(tagLibClasses);
-        }
 
-    }
 
     @Override
     protected void configureGsp(GspSettings config)
     {
         super.configureGsp(config);
-        for (WebGspConfigurer configurer : configurers) {
-            configurer.configureGsp(config);
+        if (configurers != null)
+        {
+            for (WebGspConfigurer configurer : configurers)
+            {
+                configurer.configureGsp(config);
+            }
         }
     }
 }

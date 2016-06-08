@@ -297,6 +297,8 @@ public class ResponseIncludeWrapper extends HttpServletResponseWrapper
         error = true;
         statusMessage = msg;
         flushBuffer();
+
+
     }
 
     /**

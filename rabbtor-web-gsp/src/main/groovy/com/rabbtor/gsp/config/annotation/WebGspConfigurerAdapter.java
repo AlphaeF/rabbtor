@@ -26,11 +26,6 @@ public class WebGspConfigurerAdapter implements WebGspConfigurer
 
     }
 
-    @Override
-    public void registerGspTagLibraries(Set<Class<?>> tagLibRegistry)
-    {
-
-    }
 
     @Override
     public void registerTldScanPaths(List<String> scanPaths)

@@ -14,6 +14,7 @@
  */
 package com.rabbtor.gsp.config.annotation;
 
+import com.rabbtor.gsp.taglib.config.annotation.GspTagLibScan;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -21,7 +22,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({WebGspConfiguration.class, GspJspConfiguration.class})
+@Import({WebGspConfiguration.class, WebTagLibraryLookupRegistrar.class, GspJspConfiguration.class})
 public @interface EnableWebGsp
 {
+    Class<?>[] tagLibClasses() default {};
 }

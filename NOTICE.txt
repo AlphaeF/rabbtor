@@ -13,16 +13,21 @@ is strictly forbidden unless prior written permission is obtained
 from Rabbytes,Inc.
 
 This product includes code under copywrite of the following entities distributed under Apache 2.0
-Grails 2.3.0
-Copyright (c) 2013 Pivotal, Inc.
+- Grails 2.3.0
+  Copyright (c) 2013 Pivotal, Inc.
 
-Spring Framework 4.2.6.RELEASE
-Copyright (c) 2002-2016 Pivotal, Inc.
+- Spring Framework 4.2.6.RELEASE
+  Copyright (c) 2002-2016 Pivotal, Inc.
+
+- Apache Tomcat
+  Copyright 1999-2016 The Apache Software Foundation
+
 
 This product includes software developed at
 The Apache Software Foundation (http://www.apache.org/).
 
-This product may include a number of subcomponents with
+This product or included codes and libraries mentioned above may include a number of subcomponents with
 separate copyright notices and license terms. Your use of the source
 code for the these subcomponents is subject to the terms and
-conditions of the subcomponent's license, as noted in the LICENSE file. 
+conditions of the subcomponent's license, as noted in the LICENSE file.
+
