@@ -25,7 +25,8 @@ spring {
         }
     }
     gsp {
-        templateRoots = ['/WEB-INF/gsp/']
+        enabled = true
+        templateRoots = ['/WEB-INF/templates/']
         taglib {
             packages = ['com.rabbtor.example.web']
             classes = ['com.rabbtor.example.web.tags.MyTagLib']

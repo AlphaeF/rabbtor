@@ -56,7 +56,7 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
 
 
     @Bean(autowire = Autowire.BY_NAME)
-    GroovyPagesTemplateEngine groovyPagesTemplateEngine() {
+    public GroovyPagesTemplateEngine groovyPagesTemplateEngine() {
         GroovyPagesTemplateEngine templateEngine = new GroovyPagesTemplateEngine();
         templateEngine.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
         templateEngine.setGroovyPageLocator(groovyPageLocator());
@@ -64,7 +64,7 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
     }
 
     @Bean(autowire = Autowire.BY_NAME)
-    GroovyPageLocator groovyPageLocator() {
+    public GroovyPageLocator groovyPageLocator() {
         GroovyPageLocator pageLocator = createGroovyPageLocator();
         return pageLocator;
     }

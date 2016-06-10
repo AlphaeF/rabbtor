@@ -17,6 +17,7 @@ package com.rabbtor.gsp.config.annotation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.grails.plugins.web.taglib.RenderTagLib;
 import org.grails.plugins.web.taglib.SitemeshTagLib;
@@ -25,10 +26,12 @@ import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
 import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
+import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.ViewResolver;
@@ -83,6 +86,8 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
         return groovyPageLayoutFinder;
     }
 
+
+
     @Bean
     public GrailsLayoutViewResolver gspViewResolver() {
         return new GrailsLayoutViewResolver(innerGspViewResolver(), groovyPageLayoutFinder());
@@ -90,7 +95,7 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
 
     protected ViewResolver innerGspViewResolver() {
         GroovyPageViewResolver innerGspViewResolver = new GroovyPageViewResolver(groovyPagesTemplateEngine(),
-                (GrailsConventionGroovyPageLocator) groovyPageLocator());
+                (GrailsConventionGroovyPageLocator) groovyPagesTemplateEngine().getGroovyPageLocator());
         innerGspViewResolver.setAllowGrailsViewCaching(!gspTemplateEngineConfig().gspReloadingEnabled || gspTemplateEngineConfig().viewCacheTimeout != 0);
         innerGspViewResolver.setCacheTimeout(gspTemplateEngineConfig().gspReloadingEnabled ? gspTemplateEngineConfig().viewCacheTimeout : -1);
         return innerGspViewResolver;

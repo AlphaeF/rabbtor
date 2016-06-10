@@ -7,7 +7,6 @@ import com.rabbtor.gsp.taglib.config.annotation.GspTagLibScan;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@GspTagLibScan
 public class GspConfig extends WebGspConfigurerAdapter
 {
     @Override
