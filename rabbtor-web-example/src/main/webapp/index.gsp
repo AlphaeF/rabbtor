@@ -15,7 +15,7 @@
         <g:set var="name" scope="request" value="100"/>
         <t:write/>
 
-        <g:elm tag="div" id="id" name="${200}">Bu div</g:elm>
+        <g:elm @tag="div" id="id" name="${200}">Bu div</g:elm>
 
         <t:done/>
         <t:done/>

@@ -15,40 +15,34 @@
 /* Modifications copyright (C) 2016 Rabbytes Incorporated */
 package com.rabbtor.gsp.tags
 
+import com.rabbtor.gsp.taglib.TagLibraryExt
 import com.rabbtor.gsp.util.GspIncludeUtils
-import com.rabbtor.gsp.util.GspWebUtils
 import com.rabbtor.web.servlet.support.IncludeStatusException
 import com.rabbtor.web.servlet.support.RequestIncludeWrapper
 import com.rabbtor.web.servlet.support.RequestParams
-import grails.artefact.TagLibrary
 import grails.config.Settings
 import grails.core.GrailsApplication
 import grails.core.support.GrailsApplicationAware
 import grails.gsp.TagLib
 import groovy.transform.CompileStatic
-import org.grails.buffer.GrailsPrintWriter
-import org.grails.encoder.CodecLookup
 import org.grails.encoder.Encoder
 import org.grails.taglib.GroovyPageAttributes
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
-import org.springframework.context.MessageSource
-import org.springframework.context.MessageSourceResolvable
-import org.springframework.context.NoSuchMessageException
+import org.springframework.context.*
 import org.springframework.context.support.DefaultMessageSourceResolvable
 import org.springframework.core.convert.ConversionService
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder
-import org.springframework.web.servlet.support.RequestDataValueProcessor
-import org.springframework.web.util.HtmlUtils
 
+/**
+ * Implementation of common GSP tags.
+ */
 @TagLib
 class ApplicationTagLib implements
         ApplicationContextAware,
         InitializingBean,
         GrailsApplicationAware,
-        TagLibrary
+        TagLibraryExt
 {
     static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message']
     //static encodeAsForTags = ['include', 'none']
@@ -61,8 +55,6 @@ class ApplicationTagLib implements
     ConversionService conversionService
 
     MessageSource messageSource
-    CodecLookup codecLookup
-    RequestDataValueProcessor requestDataValueProcessor
 
     static final SCOPES = [page       : 'pageScope',
                            application: 'servletContext',
@@ -83,10 +75,7 @@ class ApplicationTagLib implements
         useJsessionId = config.getProperty(Settings.GRAILS_VIEWS_ENABLE_JSESSIONID, Boolean, false)
         hasResourceProcessor = applicationContext.containsBean('grailsResourceProcessor')
 
-        if (applicationContext.containsBean('requestDataValueProcessor'))
-        {
-            requestDataValueProcessor = applicationContext.getBean('requestDataValueProcessor', RequestDataValueProcessor)
-        }
+
     }
 /**
  * Obtains the value of a cookie.
@@ -141,6 +130,9 @@ class ApplicationTagLib implements
         null
     }
 
+    /**
+     * Server side include similar to {@code <jsp:include />}
+     */
     Closure include = { attrs, body ->
         def path = attrs.path;
         def mapping = attrs.mapping
@@ -170,10 +162,7 @@ class ApplicationTagLib implements
 
         def includeResult = GspIncludeUtils.include(path, wrappedRequest, response, [:])
         def var = attrs.var;
-        if (var)
-        {
-            g.set(attrs: [(("${var}IncludeResult").toString()): includeResult, scope: attrs.scope])
-        }
+
 
 
 
@@ -196,6 +185,7 @@ class ApplicationTagLib implements
         includeResult
     }
 
+
     Closure mvcUrl = { attrs ->
         def mapping = attrs.mapping
         if (!mapping) throw new IllegalArgumentException("[mapping] attribute must be specified for <g:mvcUrl>")
@@ -209,6 +199,7 @@ class ApplicationTagLib implements
         }
         return builder.buildAndExpand(urivars as Object[])
     }
+
 
     Closure mvcPath = { attrs ->
         def mapping = attrs.mapping
@@ -225,13 +216,18 @@ class ApplicationTagLib implements
         return url
     }
 
-    Closure elm = { attrs, body  ->
+
+
+
+
+    Closure elm = { Map attrs, body  ->
+
         def tagName = attrs.remove('tagName')
         if (!tagName)
             throw new IllegalArgumentException("[tagName] attribute must be specified for <g:elm>.")
 
         out << "<$tagName "
-        outputAttributes(attrs,out)
+        outputAttributes(attrs,out, attrs.remove('suppressAttrs'))
         out << ">"
         if (body) {
             out << body()
@@ -241,30 +237,16 @@ class ApplicationTagLib implements
         }
     }
 
-    /**
-     * Dump out attributes in HTML compliant fashion.
-     */
-    @CompileStatic
-    void outputAttributes(Map attrs, GrailsPrintWriter writer) {
-        attrs.remove('tagName')
-        Encoder htmlEncoder = codecLookup?.lookupEncoder('HTML')
-        String encoding = GspWebUtils.lookupEncoding(response,request)
-        attrs.each { k, v ->
-                writer << ' '+k
-                writer << '="'
-                writer << v == null ? '' : GspWebUtils.htmlEncode(v,htmlEncoder,encoding)
-                writer << '"'
-        }
-    }
+
 
     /**
      * Resolves a message code for a given error or code from the resource bundle.
      *
      * @emptyTag
      *
-     * @attr error The error to resolveOrDefault the message for. Used for built-in Grails messages.
-     * @attr message The object to resolveOrDefault the message for. Objects must implement org.springframework.context.MessageSourceResolvable.
-     * @attr code The code to resolveOrDefault the message for. Used for custom application messages.
+     * @attr error The error to lookup the message for. Used for built-in Grails messages.
+     * @attr message The object to lookup the message for. Objects must implement org.springframework.context.MessageSourceResolvable.
+     * @attr code The code to lookup the message for. Used for custom application messages.
      * @attr args A list of argument values to apply to the message, when code is used.
      * @attr default The default message to output if the error or code cannot be found in messages.properties.
      * @attr encodeAs The name of a codec to apply, i.e. HTML, JavaScript, URL etc
@@ -333,14 +315,13 @@ class ApplicationTagLib implements
         ''
     }
 
-    @CompileStatic
+
     private List encodeArgsIfRequired(arguments) {
         arguments.collect { value ->
             if (value == null || value instanceof Number || value instanceof Date) {
                 value
             } else {
-                Encoder encoder = codecLookup?.lookupEncoder('HTML')
-                GspWebUtils.htmlEncode(value,encoder,GspWebUtils.lookupEncoding(response,request))
+                htmlEscape(value)
             }
         }
     }

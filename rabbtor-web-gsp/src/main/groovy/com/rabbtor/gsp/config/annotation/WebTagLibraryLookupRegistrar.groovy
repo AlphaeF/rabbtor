@@ -15,7 +15,8 @@
 package com.rabbtor.gsp.config.annotation;
 
 import com.rabbtor.gsp.taglib.config.annotation.TagLibraryLookupRegistrar;
-import com.rabbtor.gsp.tags.ApplicationTagLib;
+import com.rabbtor.gsp.tags.ApplicationTagLib
+import com.rabbtor.gsp.tags.FormTagLib;
 import com.rabbtor.gsp.tags.FormatTagLib;
 import org.grails.plugins.web.taglib.RenderTagLib;
 import org.grails.plugins.web.taglib.SitemeshTagLib;
@@ -35,6 +36,7 @@ public class WebTagLibraryLookupRegistrar extends TagLibraryLookupRegistrar
         tagLibClasses.add(SitemeshTagLib.class);
         tagLibClasses.add(ApplicationTagLib.class);
         tagLibClasses.add(FormatTagLib.class);
+        tagLibClasses.add(FormTagLib.class);
     }
 
     @Override

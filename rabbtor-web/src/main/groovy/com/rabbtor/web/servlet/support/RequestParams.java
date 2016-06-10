@@ -39,7 +39,7 @@ public class RequestParams
     private void ensureParameters()
     {
         if (parameters == null)
-            parameters = new LinkedHashMap<>();
+            parameters = new LinkedHashMap();
 
     }
 

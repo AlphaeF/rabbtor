@@ -1,7 +1,7 @@
 /**
  * Copyright 2016 - Rabbytes Incorporated
  * All Rights Reserved.
- *
+ * <p>
  * NOTICE:  All information contained herein is, and remains
  * the property of Rabbytes Incorporated and its suppliers,
  * if any.  The intellectual and technical concepts contained
@@ -28,11 +28,29 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultModelMetadataRegistry implements ModelMetadataRegistry
 {
     private List<ModelMetadataProvider> providers = new ArrayList<>();
-    private Map<Class<?>,ModelMetadata> metadataMap = new ConcurrentHashMap<>();
+    private Map<Class<?>, ModelMetadata> metadataMap = new ConcurrentHashMap<>();
+    private boolean cacheEnabled = true;
 
     public DefaultModelMetadataRegistry()
     {
         providers.add(new AnnotationModelMetadataProvider());
+    }
+
+    public boolean isCacheEnabled()
+    {
+        return cacheEnabled;
+    }
+
+    public void setCacheEnabled(boolean cacheEnabled)
+    {
+        this.cacheEnabled = cacheEnabled;
+        if (!cacheEnabled)
+            clearCache();
+    }
+
+    public void clearCache()
+    {
+        metadataMap.clear();
     }
 
     @Autowired(required = false)
@@ -51,11 +69,12 @@ public class DefaultModelMetadataRegistry implements ModelMetadataRegistry
     @Override
     public ModelMetadata getModelMetadata(Class<?> modelType)
     {
-        if (metadataMap.containsKey(modelType))
+        if (isCacheEnabled() && metadataMap.containsKey(modelType))
             return metadataMap.get(modelType);
 
         ModelMetadata metadata = null;
-        for(ModelMetadataProvider provider : providers) {
+        for (ModelMetadataProvider provider : providers)
+        {
             metadata = provider.getModelMetadata(modelType);
             if (metadata != null)
                 break;
@@ -63,7 +82,9 @@ public class DefaultModelMetadataRegistry implements ModelMetadataRegistry
         if (metadata == null)
             metadata = new EmptyModelMetadata(modelType);
 
-        metadataMap.put(modelType,metadata);
+        if (isCacheEnabled())
+            metadataMap.put(modelType, metadata);
+
         return metadata;
     }
 

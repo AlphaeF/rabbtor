@@ -38,6 +38,34 @@
 
 
 
+        <g:form name="frm" id="frm" modelAttribute="cmd" style="background: #eee; height: 40px" >
+            <p>
+            <g:label path="name" />
+            <g:input path="name" type="text" disabled="" readonly="" />
+            </p>
+
+            <p>
+                <g:label path="dateOfBirth" ></g:label>
+                <g:input path="dateOfBirth" />
+            </p>
+
+            <p>
+                <g:label path="price" ></g:label>
+                <g:input path="price"  />
+            </p>
+
+            <p>
+                <g:label path="weight" ></g:label>
+                <g:input path="weight"  />
+            </p>
+
+            <p>
+                <% cmd.id = 15 %>
+            <g:label path="id" ></g:label>
+            <g:select path="id" items="${cmd.data}" itemValue="id" itemLabel="name" noSelection="['':'-Please Select-']"  >
+            </g:select>
+            </p>
+        </g:form>
 
 
     </body>

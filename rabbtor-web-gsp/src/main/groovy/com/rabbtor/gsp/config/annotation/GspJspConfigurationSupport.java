@@ -42,7 +42,7 @@ public abstract class GspJspConfigurationSupport
 
     public String[] getTldScanPaths()
     {
-        List<String> tldScanPaths = new ArrayList<>();
+        List<String> tldScanPaths = new ArrayList();
 
         Collection<String> defaultPaths = Arrays.asList("classpath*:/META-INF/spring*.tld,classpath*:/META-INF/fmt.tld,classpath*:/META-INF/c.tld,classpath*:/META-INF/rabbtor*.tld,classpath*:/META-INF/c-1_0-rt.tld"
                 .split(","));

@@ -163,7 +163,10 @@ subprojects { project ->
                 '**/StandaloneTagLibraryLookup.*',
                 '**/TagLibraryLookupRegistrar.*',
                 '**/ResponseIncludeWrapper.*',
-                '**/RequestIncludeHelper.*'
+                '**/RequestIncludeHelper.*',
+                '**/TagLibraryExt.*',
+                '**/FormTagLib.*'
+
         ])
     }
 
@@ -372,9 +375,9 @@ subprojects { project ->
 //                    artifact sourcesJar {
 //                        classifier "sources"
 //                    }
-//                    artifact javadocJar {
-//                        classifier "javadoc"
-//                    }
+                    artifact javadocJar {
+                        classifier "javadoc"
+                    }
 
                     pom.withXml {
                         def xml = asNode()

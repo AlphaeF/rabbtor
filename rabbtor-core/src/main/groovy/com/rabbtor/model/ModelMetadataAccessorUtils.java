@@ -17,9 +17,30 @@ package com.rabbtor.model;
 
 import org.springframework.beans.factory.ListableBeanFactory;
 
+/**
+ * Utility facade to retrieve a {@link ModelMetadataAccessor}
+ */
 public class ModelMetadataAccessorUtils
 {
-    public static ModelMetadataAccessor resolveOrDefault(Class modelType, ListableBeanFactory beanFactory) {
+
+    /**
+     * If the {@code beanFactory} given is not null, searches for a {@link ModelMetadataAccessorFactory}
+     * from the {@code beanFactory}. If found, a new {@link ModelMetadataAccessor} is requested from the factory.
+     * <p>
+     *     If a factory could not be resolved, returns a new instance of {@link DefaultModelMetadataAccessor} for the
+     *     given {@code modelType}
+     * </p>
+     *
+     *
+     * @param modelType  model class for which a metadata accessor is requested
+     * @param beanFactory beanFactory in which the metadata accessor factory is searched
+     * @return {@link ModelMetadataAccessor} resolved from the {@code beanFactory} or default implementation
+     *
+     * @see ModelMetadataAccessorFactory
+     * @see DefaultModelMetadataAccessor
+     * @see ModelMetadataAccessor
+     */
+    public static ModelMetadataAccessor lookup(Class modelType, ListableBeanFactory beanFactory) {
         if (beanFactory != null)
         {
             ModelMetadataAccessorFactory factory = null;
@@ -33,4 +54,6 @@ public class ModelMetadataAccessorUtils
         }
         return new DefaultModelMetadataAccessor(modelType);
     }
+
+
 }

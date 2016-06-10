@@ -50,7 +50,7 @@ public class FormFunctions
     public static String propertyDisplayName(String path, PageContext pageContext, RequestContext requestContext) {
         try {
             Object model = getModelObject(requestContext,path,pageContext);
-            ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.resolveOrDefault(model.getClass(),requestContext.getWebApplicationContext());
+            ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(),requestContext.getWebApplicationContext());
             String[] codes = metadataAccessor.getModelNameCodes(path);
             MessageSourceResolvable messageSourceResolvable = new DefaultMessageSourceResolvable(codes,metadataAccessor.getDisplayName(path));
             return requestContext.getMessage(messageSourceResolvable);

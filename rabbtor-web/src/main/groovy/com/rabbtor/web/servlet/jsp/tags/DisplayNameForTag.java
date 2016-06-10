@@ -39,7 +39,7 @@ public class DisplayNameForTag extends AbstractHtmlElementTag
     {
         Object model = getModelObject();
 
-        ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.resolveOrDefault(model.getClass(), getRequestContext().getWebApplicationContext());
+        ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(), getRequestContext().getWebApplicationContext());
         String[] codes = metadataAccessor.getModelNameCodes(getPropertyPath());
         MessageSourceResolvable messageSourceResolvable = new DefaultMessageSourceResolvable(codes, metadataAccessor.getDisplayName(getPropertyPath()));
         return getRequestContext().getMessage(messageSourceResolvable);

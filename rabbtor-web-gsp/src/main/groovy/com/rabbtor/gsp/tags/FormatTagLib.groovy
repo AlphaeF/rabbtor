@@ -15,6 +15,7 @@
 /* Modifications copyright (C) 2016 Rabbytes Incorporated */
 package com.rabbtor.gsp.tags
 
+
 import grails.artefact.TagLibrary
 import grails.gsp.TagLib
 import groovy.transform.CompileStatic
@@ -25,6 +26,7 @@ import org.grails.web.servlet.mvc.GrailsWebRequest
 import org.springframework.context.MessageSource
 import org.springframework.context.NoSuchMessageException
 import org.springframework.util.StringUtils
+import org.springframework.web.servlet.support.RequestContextUtils
 
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -52,7 +54,7 @@ class FormatTagLib implements TagLibrary {
     @CompileStatic
     String messageHelper(String code, Object defaultMessage = null, List args = null, Locale locale = null) {
         if (locale == null) {
-            locale = GrailsWebRequest.lookup().getLocale()
+            locale = RequestContextUtils.getLocale(request)
         }
         def message
         try {

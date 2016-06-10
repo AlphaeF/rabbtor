@@ -21,7 +21,16 @@ import com.rabbtor.model.annotation.DisplayName
 class EditPersonModel
 {
     @DisplayName(value = "Name")
-    String name
-    Long id
+    String name = "Foo"
+
+    Long id = 20
+
+    Date dateOfBirth = new Date()
+
+    Double price = 29.23d
+
+    Float weight = 32.12f
+
+    List<Map> data = [[id:20,name:'Foo'], [id:30, name:'Bar']]
 
 }

@@ -21,4 +21,6 @@
             <s:param name="names">Bar</s:param>
         </r:include>
     </body>
+
+    <jsp:include page="list.jsp" />
 </html>
