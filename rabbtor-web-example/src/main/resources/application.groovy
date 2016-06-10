@@ -26,6 +26,10 @@ spring {
     }
     gsp {
         templateRoots = ['/WEB-INF/gsp/']
+        taglib {
+            packages = ['com.rabbtor.example.web']
+            classes = ['com.rabbtor.example.web.tags.MyTagLib']
+        }
     }
     mvc {
         view {

@@ -2,6 +2,7 @@
 
 dependencies {
 
+    compileOnly ("org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}")
 
     provided("org.springframework:spring-web:${springVersion}")
     provided("org.springframework:spring-webmvc:${springVersion}")

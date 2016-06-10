@@ -27,8 +27,6 @@ import java.util.Map;
  * It may optionally fall back to the original request parameters.By default fall back is disabled. If it is enabled, all request parameters
  * are merged with the custom parameters.A custom parameter for a given parameter name overrides the request parameter with the same name.
  *
- * @Author Cagatay Kalan
- * @Since 4.3.0
  *
  *
  */

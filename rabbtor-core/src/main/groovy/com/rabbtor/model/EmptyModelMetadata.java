@@ -42,6 +42,6 @@ public class EmptyModelMetadata implements ModelMetadata
     @Override
     public Set<ModelPropertyMetadata> getProperties()
     {
-        return Collections.unmodifiableSet(Collections.emptySet());
+        return Collections.unmodifiableSet(Collections.<ModelPropertyMetadata>emptySet());
     }
 }

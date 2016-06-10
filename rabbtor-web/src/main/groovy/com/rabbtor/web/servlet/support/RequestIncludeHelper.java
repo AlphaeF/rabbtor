@@ -28,8 +28,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * @author Cagatay Kalan
- * @since 4.3.0
+ * Executes a server side include request.
  */
 public class RequestIncludeHelper
 {
@@ -74,6 +73,7 @@ public class RequestIncludeHelper
     {
         this.params = params;
     }
+
 
     public IncludeResult include(String path, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {

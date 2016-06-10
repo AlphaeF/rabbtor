@@ -14,19 +14,28 @@
  */
 package com.rabbtor.gsp.config.annotation;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public class GspSettings
 {
 
+    @Value("${spring.gsp.reload:true}")
     boolean gspReloadingEnabled;
 
+    @Value("${spring.gsp.locator.cacheTimeout:5000}")
     long locatorCacheTimeout;
 
+    @Value("${spring.gsp.layout.cache:true}")
     boolean gspLayoutCaching;
 
+    @Value("${spring.gsp.layout.default:#{null}}")
     String defaultLayoutName;
 
+    @Value("${spring.gsp.templateRoots:#{null}}")
     String[] templateRoots;
 
+
+    @Value("${spring.gsp.view.cacheTimeout:1000}")
     long viewCacheTimeout;
 
     public boolean isGspReloadingEnabled()
@@ -94,7 +103,7 @@ public class GspSettings
     }
 
 
-    protected GspSettings()
+    public GspSettings()
     {
         locatorCacheTimeout = 5000;
         gspLayoutCaching = true;

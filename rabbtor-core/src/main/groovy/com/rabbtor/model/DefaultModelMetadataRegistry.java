@@ -1,7 +1,7 @@
 /**
  * Copyright 2016 - Rabbytes Incorporated
  * All Rights Reserved.
- * <p>
+ *
  * NOTICE:  All information contained herein is, and remains
  * the property of Rabbytes Incorporated and its suppliers,
  * if any.  The intellectual and technical concepts contained
@@ -27,8 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultModelMetadataRegistry implements ModelMetadataRegistry
 {
-    private List<ModelMetadataProvider> providers = new ArrayList<>();
-    private Map<Class<?>, ModelMetadata> metadataMap = new ConcurrentHashMap<>();
+    private List<ModelMetadataProvider> providers = new ArrayList();
+    private Map<Class<?>, ModelMetadata> metadataMap = new ConcurrentHashMap();
     private boolean cacheEnabled = true;
 
     public DefaultModelMetadataRegistry()

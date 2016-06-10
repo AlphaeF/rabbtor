@@ -5,6 +5,7 @@ dependencies {
         exclude group: 'commons-logging', module:'commons-logging'
     }
 
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: "$commonsCollectionsVersion"
 
     compileOnly ("javax.servlet.jsp:javax.servlet.jsp-api:${jspVersion}")
     compileOnly ("javax.el:javax.el-api:${jspVersion}")

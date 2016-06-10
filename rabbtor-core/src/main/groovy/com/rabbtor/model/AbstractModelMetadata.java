@@ -55,7 +55,7 @@ public abstract class AbstractModelMetadata implements ModelMetadata
     public Set<ModelPropertyMetadata> getProperties()
     {
         if (properties == null) {
-            properties = new HashSet<>();
+            properties = new HashSet();
             PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(getModelType());
             for (PropertyDescriptor pd : propertyDescriptors) {
                 if (pd.getName().equalsIgnoreCase("class"))

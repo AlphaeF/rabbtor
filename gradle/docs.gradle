@@ -1,0 +1,110 @@
+/*
+ * Copyright ${year} - ${name}
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains
+ * the property of ${name} and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to ${name}
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from ${name}.
+ */
+
+/**
+ * Since Grails is a mixed Groovy/Java codebase the javadoc tool needs stubs in order for javadoc compilation to pass
+ * This target generates a set of stubs for the Groovy sources
+ */
+task stubs {
+    ext.destinationDir = "$buildDir/docs/stubs"
+    doFirst {
+        def isolatedAnt = services.get(org.gradle.api.internal.project.IsolatedAntBuilder)
+        isolatedAnt.execute {
+            mkdir(dir: destinationDir)
+            taskdef(name: "generatestubs", classname: "org.codehaus.groovy.ant.GenerateStubsTask") {
+                classpath {
+                    for(sub in subprojects) {
+                        pathelement path: sub.sourceSets.main.compileClasspath.asPath
+                    }
+                }
+            }
+
+            generatestubs(destdir: destinationDir) {
+                classpath {
+                    for(sub in subprojects) {
+                        pathelement path: sub.sourceSets.main.compileClasspath.asPath
+                    }
+                }
+                src {
+                    for (sub in subprojects) {
+                        sub.sourceSets.main.groovy.srcDirs.each { srcDir ->
+                            if (srcDir.exists()) {
+                                dirset(dir: srcDir) {
+                                    exclude name: "**/*.properties"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+task docs {
+    ext.destinationDir = file("${projectDir}/doc")
+}
+
+task javadoc(type:Javadoc) {
+    def subs = subprojects.findAll { it.name != 'rabbtor-dependencies' && it.name != 'rabbtor-bom' &&
+            it.name != 'rabbtor-compat' && it.name != 'rabbtor-web-example'}
+    classpath = files(subs.configurations.compile)
+    dependsOn stubs
+    maxMemory = '256M'
+    destinationDir = file("$docs.destinationDir/javadoc")
+    source subs.sourceSets.main.groovy.srcDirs + stubs.destinationDir
+    include "com/rabbtor/**", "grails/**"
+    exclude "**/**.groovy"
+    project.configure(options) {
+        windowTitle = "Rabbtor $rabbtorVersion"
+        docTitle = "<h1>Rabbtor</h1>"
+        encoding = "UTF-8"
+        memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PACKAGE
+        author = true
+        version = true
+        use = true
+        breakIterator = true
+        links("http://java.sun.com/j2ee/1.4/docs/api", "http://java.sun.com/j2se/1.5.0/docs/api", "http://static.springframework.org/spring/docs/2.5.x/api")
+//        tags("todo:a:To do")  todo fix the javadoc task to accept this option
+    }
+    verbose = false
+}
+
+task groovydoc(type:Groovydoc) {
+    def subs = subprojects.findAll { it.name != 'rabbtor-dependencies' && it.name != 'rabbtor-bom' &&
+            it.name != 'rabbtor-compat' && it.name != 'rabbtor-web-example' }
+    classpath = files(subs.configurations.compile)
+    groovyClasspath = files(subs.configurations.compile)
+    destinationDir = file("$docs.destinationDir/api")
+    windowTitle = "Rabbtor $rabbtorVersion"
+    docTitle = "Rabbtor $rabbtorVersion"
+    source subs.sourceSets.main.groovy.srcDirs
+    use = true
+// Can't make these link methods to work
+//    link("http://static.springsource.org/spring/docs/3.0.x/javadoc-api", "org.springframework.")
+//    link("http://download.oracle.com/javase/1.5.0/docs/api", "java." , "javax.")
+//    link("http://download.oracle.com/javaee/5/api", "javax.")
+    doLast {
+        delete("${buildDir}/tmp")
+    }
+}
+
+
+
+task gdoc(type: GradleBuild, dependsOn: ["groovydoc"]) {
+    tasks = ["clean", "assemble"]
+}
+
+docs.dependsOn gdoc

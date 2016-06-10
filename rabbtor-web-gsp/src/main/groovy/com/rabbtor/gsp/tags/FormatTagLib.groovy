@@ -34,6 +34,8 @@ import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 
 /**
+ * Copied from Grails (http://grails.org)
+ *
  * The base application tag library for Grails many of which take inspiration from Rails helpers (thanks guys! :)
  * This tag library tends to get extended by others as tags within here can be re-used in said libraries.
  *
@@ -41,7 +43,7 @@ import java.text.NumberFormat
  * @author Lari Hotari
  * @author Graeme Rocher
  *
- * @since 0.6
+ * @since 1.0.0
  */
 @TagLib
 class FormatTagLib implements TagLibrary {

@@ -38,7 +38,7 @@ ext {
     antVersion = "1.9.3"
     aspectjVersion = "1.8.5"  // use same version as org.springframework:spring-aspects uses
     commonsCliVersion = "1.2"
-    commonsCollectionsVersion = "3.2.1"
+    commonsCollectionsVersion = "4.1"
     commonsIOVersion = "2.2"
     commonsLangVersion = "2.6"
     datastoreVersion = "4.0.0.RELEASE"
@@ -186,8 +186,8 @@ subprojects { project ->
     apply plugin: 'optional-base'
 
 
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
+    sourceCompatibility = "1.7"
+    targetCompatibility = "1.7"
 
     repositories {
         maven { url "http://rabbytes.bintray.com/maven" }
@@ -200,12 +200,29 @@ subprojects { project ->
     configure([compileGroovy, compileTestGroovy]) {
         groovyOptions.fork(jvmArgs: ['-XX:MaxPermSize=512m'], memoryInitialSize: '128M', memoryMaximumSize: '1G')
         groovyOptions.encoding = "UTF-8"
+        groovyOptions.keepStubs = true
+        groovyOptions.stubDir = file("$buildDir/docs/stubs")
         options.encoding = "UTF-8"
     }
 
     configure([compileJava, compileTestJava]) {
         options.deprecation = true
         options.debug = true
+    }
+
+    configure([javadoc]) {
+        options.encoding "UTF-8"
+        options.docEncoding "UTF-8"
+        options.charSet "UTF-8"
+        options.jFlags "-Xms64M", "-Xmx512M"
+        if(!isJava8Compatible) {
+            options.jFlags "-XX:MaxPermSize=256m"
+        }
+
+        options.source = sourceSets.main.groovy.srcDirs + "$buildDir\\docs\\stubs"
+        include "com/rabbtor/**", "org/grails/**"
+        exclude "**/**.groovy"
+        println options.source
     }
 
 //    sourceSets {
@@ -233,6 +250,7 @@ subprojects { project ->
     dependencies {
         compile groovyDependency
 
+
         provided("org.springframework:spring-core:${springVersion}") {
         }
         provided("org.springframework:spring-beans:${springVersion}") {
@@ -241,12 +259,11 @@ subprojects { project ->
         }
 
 
-
-
         compileOnly "org.apache.ant:ant:${antVersion}"
         compileOnly "org.codehaus.groovy:groovy-ant:$groovyVersion"
         compileOnly "jline:jline:$jlineVersion"
         compileOnly "org.fusesource.jansi:jansi:$jansiVersion"
+
 
 
 
@@ -448,6 +465,11 @@ subprojects { project ->
 
 
 }
+
+// From this point on we need the subprojects to be fully configured, so force their full evaluation
+subprojects.each { evaluationDependsOn it.path }
+
+
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
