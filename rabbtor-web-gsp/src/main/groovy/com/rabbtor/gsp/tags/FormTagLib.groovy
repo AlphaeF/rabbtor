@@ -22,6 +22,7 @@ package com.rabbtor.gsp.tags
 import com.rabbtor.gsp.taglib.TagLibraryExt
 import com.rabbtor.model.ModelMetadataAccessor
 import com.rabbtor.model.ModelMetadataAccessorUtils
+import com.rabbtor.web.servlet.support.RequestParams
 import com.rabbtor.web.servlet.util.BindStatusUtils
 import com.rabbtor.web.servlet.util.RequestContextUtils
 import grails.gsp.TagLib
@@ -138,18 +139,17 @@ class FormTagLib implements TagLibraryExt
         // Set action and method
         attrs.method = getHttpMethod(attrs)
 
-        String action = null
-        def mvcUrl = attrs.remove('mvcUrl')
-        if (mvcUrl && !(mvcUrl instanceof Map))
-            throwTagError('mvcUrl attribute of <g:form> must be a map containing the same attributes which apply to the <g:mvcUrl> tag.')
-        if (mvcUrl)
-            action = processAction(attrs, g.mvcUrl(new GroovyPageAttributes((Map) mvcUrl)))
+        def action = attrs.action
+        String actionStr = null
+        if (action instanceof Map) {
+            actionStr = processAction(attrs, g.mvcUrl(new GroovyPageAttributes((Map) action)))
+        }
         else
         {
-            action = resolveFormAction(attrs)
+            actionStr = resolveFormAction(attrs)
         }
 
-        attrs.action = action
+        attrs.action = actionStr
 
 
         // AJAX
@@ -184,16 +184,12 @@ class FormTagLib implements TagLibraryExt
      */
     private void setAjaxFormAttrs(Map attrs, def ajax)
     {
+        attrs['data-ajax'] = 'true'
         if (ajax && ajax instanceof Map)
         {
-            def mode = ajax.mode ?: 'update'
-            def target = ajax.target
-
-            if (!target)
-                throwTagError("ajax target must be set for the ajax attribute of <g:form />")
-
-            attrs['data-ajax'] = true
-            attrs['data-ajax-update'] = target
+            ajax.each {
+                attrs["data-ajax-${it.key}"] = htmlEscape(ValueFormatter.getDisplayString(it.value,false))
+            }
         }
     }
 
@@ -777,6 +773,14 @@ class FormTagLib implements TagLibraryExt
         RequestContext requestContext = getRequestContext()
         String action = attrs.remove('action')
         String servletRelativeAction = attrs.remove('servletRelativeAction')
+
+        // If action starts with '~/', it means it is servlet relative
+        if (action && !servletRelativeAction && action.startsWith('~/'))
+        {
+            servletRelativeAction = action.substring(1)
+            action = null
+        }
+
         if (action)
         {
             action = getDisplayString(attrs, action);

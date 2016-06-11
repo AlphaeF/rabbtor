@@ -338,10 +338,17 @@ class ApplicationTagLib implements
 
         UrlType type = UrlUtils.determineUrlType(value)
 
+        if (value.startsWith('~/'))
+        {
+            value = value.substring(1)
+        }
+
+
 
         StringBuilder url = new StringBuilder();
         if (type == UrlType.CONTEXT_RELATIVE) {
-            // add application context to url
+
+
             if (context == null) {
                 url.append(request.getContextPath());
             }

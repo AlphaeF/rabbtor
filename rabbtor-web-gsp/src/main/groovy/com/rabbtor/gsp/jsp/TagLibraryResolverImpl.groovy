@@ -15,11 +15,15 @@
 package com.rabbtor.gsp.jsp
 
 import grails.core.GrailsApplication
+import grails.core.support.GrailsApplicationAware
 import org.grails.gsp.jsp.*
+import org.springframework.beans.factory.BeanClassLoaderAware
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ResourceLoaderAware
 import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver
+import org.springframework.web.context.ServletContextAware
 import org.springframework.web.context.support.ServletContextResource
 
 import javax.servlet.ServletContext
@@ -27,15 +31,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-public class TagLibraryResolverImpl implements TagLibraryResolver
+public class TagLibraryResolverImpl implements ServletContextAware, GrailsApplicationAware, TagLibraryResolver, ResourceLoaderAware, BeanClassLoaderAware
 {
     protected Map<String, JspTagLib> tagLibs = new ConcurrentHashMap<String, JspTagLib>()
     GrailsApplication grailsApplication
     ServletContext servletContext
     ClassLoader classLoader
     ResourceLoader resourceLoader
-
-    @Value('#{\'${grails.gsp.tldScanPattern:}\'?:\'${spring.gsp.tldScanPattern:}\'}')
     String[] tldScanPatterns = [] as String[];
     volatile boolean initialized = false
 

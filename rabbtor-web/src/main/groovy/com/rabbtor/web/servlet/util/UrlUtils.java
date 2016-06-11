@@ -20,7 +20,7 @@ public class UrlUtils
             return UrlType.RELATIVE;
         if (url.contains(URL_TYPE_ABSOLUTE))
             return UrlType.ABSOLUTE;
-        if (url.startsWith("/"))
+        if (url.startsWith("/") || url.startsWith("~/"))
             return UrlType.CONTEXT_RELATIVE;
 
         return UrlType.RELATIVE;
