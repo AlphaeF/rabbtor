@@ -17,7 +17,6 @@
 /* Modifications copyright (C) 2016 - Rabbytes,Inc */
 
 
-
 package com.rabbtor.gsp.tags
 
 import com.rabbtor.gsp.taglib.TagLibraryExt
@@ -37,12 +36,17 @@ import org.springframework.util.ObjectUtils
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.servlet.support.BindStatus
+import org.springframework.web.servlet.support.RequestContext
 import org.springframework.web.servlet.support.RequestDataValueProcessor
 import org.springframework.web.servlet.tags.form.SelectedValueComparator
 import org.springframework.web.servlet.tags.form.ValueFormatter
+import org.springframework.web.util.HtmlUtils
+import org.springframework.web.util.UriUtils
 
 import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
 import java.beans.PropertyEditor
 
 /**
@@ -86,6 +90,10 @@ import java.beans.PropertyEditor
 @TagLib
 class FormTagLib implements TagLibraryExt
 {
+    static returnObjectForTags = ['displayNameFor','idFor']
+
+    /** The default HTTP method using which form values are sent to the server: "post" */
+    private static final String DEFAULT_METHOD = "post";
 
     /**
      * Name of the exposed path variable within the scope of this tag: "nestedPath".
@@ -110,7 +118,6 @@ class FormTagLib implements TagLibraryExt
     @Autowired(required = false)
     ConversionService conversionService
 
-
     CodecLookup codecLookup
 
     /**
@@ -118,7 +125,7 @@ class FormTagLib implements TagLibraryExt
      */
     Closure form = { attrs, body ->
 
-        String modelAttribute = attrs.remove(MODEL_ATTRIBUTE)
+        String modelAttribute = (attrs.remove(MODEL_ATTRIBUTE) ?: attrs.remove('commandName')) ?: DEFAULT_COMMAND_NAME
         request.setAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, modelAttribute)
 
         // Save previous nestedPath value, build and expose current nestedPath value.
@@ -128,8 +135,32 @@ class FormTagLib implements TagLibraryExt
         request.setAttribute(NESTED_PATH_VARIABLE_NAME,
                 modelAttribute + PropertyAccessor.NESTED_PROPERTY_SEPARATOR);
 
+        // Set action and method
+        attrs.method = getHttpMethod(attrs)
+
+        String action = null
+        def mvcUrl = attrs.remove('mvcUrl')
+        if (mvcUrl && !(mvcUrl instanceof Map))
+            throwTagError('mvcUrl attribute of <g:form> must be a map containing the same attributes which apply to the <g:mvcUrl> tag.')
+        if (mvcUrl)
+            action = processAction(attrs, g.mvcUrl(new GroovyPageAttributes((Map) mvcUrl)))
+        else
+        {
+            action = resolveFormAction(attrs)
+        }
+
+        attrs.action = action
+
+
+        // AJAX
+        if (attrs.containsKey('ajax'))
+        {
+            setAjaxFormAttrs(attrs, attrs.remove('ajax'))
+        }
+
         // RENDER the TAG content
         attrs.tagName = 'form'
+
         out << g.elm(attrs, body)
 
         // cleanup
@@ -147,14 +178,34 @@ class FormTagLib implements TagLibraryExt
     }
 
     /**
-     * Generates HTML input element
-     * <p>
-     * <strong>type</strong> attribute determines which type of input is generated. text, password, checkbox, radio, email etc.
-     * If type is checkbox or radio, <strong>value</strong> attribute is required.
-     * </p>
-     *
-     * Usage: {@code <g:input type='text|checkbox|radio|hidden|password|email|..' path='personCommand.age' />}
+     * Put unobtrusive ajax HTML 5 attributes to the current form tag attributes
+     * @param attrs current form tag attributes
+     * @param ajax ajax options Map
      */
+    private void setAjaxFormAttrs(Map attrs, def ajax)
+    {
+        if (ajax && ajax instanceof Map)
+        {
+            def mode = ajax.mode ?: 'update'
+            def target = ajax.target
+
+            if (!target)
+                throwTagError("ajax target must be set for the ajax attribute of <g:form />")
+
+            attrs['data-ajax'] = true
+            attrs['data-ajax-update'] = target
+        }
+    }
+
+/**
+ * Generates HTML input element
+ * <p>
+ * <strong>type</strong> attribute determines which type of input is generated. text, password, checkbox, radio, email etc.
+ * If type is checkbox or radio, <strong>value</strong> attribute is required.
+ * </p>
+ *
+ * Usage: {@code <g:input type='text|checkbox|radio|hidden|password|email|..' path='personCommand.age' />}
+ */
     Closure input = { attrs, body ->
         getRequiredAttribute(attrs, 'path', 'g:input')
 
@@ -166,17 +217,24 @@ class FormTagLib implements TagLibraryExt
 
         if (attrs.type == 'checkbox')
         {
-            if (getHtmlBooleanAttributeValue(attrs, 'disabled'))
+            if (!getHtmlBooleanAttributeValue(attrs, 'disabled'))
             {
                 Map hiddenAttrs = new GroovyPageAttributes()
                 hiddenAttrs.name = WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + getName(attrs)
                 hiddenAttrs.value = processFieldValue(hiddenAttrs.name, 'on', attrs.type)
-                out << g.hidden(hiddenAttrs)
+                hiddenAttrs.type = 'hidden'
+                hiddenAttrs.tagName = 'input'
+
+                out << g.elm(hiddenAttrs)
             }
         }
 
         if (isSingleSelectTag(attrs.type))
         {
+            // Generate incremental id
+            if (!attrs.id)
+                attrs.id = nextElementId(resolveId(attrs))
+
             Class<?> valueType = bindStatus.getValueType();
 
             if (Boolean.class == valueType || boolean.class == valueType)
@@ -218,28 +276,28 @@ class FormTagLib implements TagLibraryExt
      * Generates HTML checkbox input element
      * Usage: {@code <g:checkbox path='..' value='..' />}
      * Same as using {@code <g:input type='checkbox' />}
-     * {@see #input}
+     * {@see # input}
      */
     Closure checkbox = { attrs, body ->
         attrs.type = 'checkbox'
-        return input(attrs, body)
+        out << input(attrs, body)
     }
 
     /**
      * Generates HTML radio input element.
      * Usage: {@code <g:radio path='..' value='..' />}
      * Same as using {@code <g:input type='radio' />}
-     * {@see #input}
+     * {@see # input}
      */
     Closure radio = { attrs, body ->
         attrs.type = 'radio'
-        return input(attrs, body)
+        out << input(attrs, body)
     }
 
     /**
      * Generates HTML hidden input element.
      * Usage: {@code <g:hidden path='..' />}
-     * {@see #input}
+     * {@see # input}
      */
     Closure hidden = { attrs, body ->
         attrs.type = 'hidden'
@@ -261,19 +319,9 @@ class FormTagLib implements TagLibraryExt
      * @see #input
      */
     Closure label = { attrs, body ->
-        getRequiredAttribute(attrs, 'path', 'g:label')
-        BindStatus bindStatus = getBindStatus(attrs)
-        String beanName = BindStatusUtils.getBeanName(bindStatus)
-        def model = RequestContextUtils.getModelObject(getRequestContext(), request, beanName)
-        if (!model)
-        {
-            throw new IllegalStateException("Neither BindingResult nor plain target object for bean name '" +
-                    beanName + "' available as request attribute");
-        }
-        ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(), requestContext.getWebApplicationContext());
-        String displayName = metadataAccessor.getDisplayName(bindStatus.path)
-        attrs.for = attrs.for ?: autogenerateId(getName(attrs))
 
+        String displayName = displayNameFor(attrs)
+        attrs.for = attrs.for ?: autogenerateId(getName(attrs))
         attrs.remove('bindStatus')
         attrs.remove('path')
 
@@ -284,6 +332,25 @@ class FormTagLib implements TagLibraryExt
         }
 
         out << g.elm(attrs, body)
+    }
+
+    Closure displayNameFor = { attrs ->
+        getRequiredAttribute(attrs, 'path', 'g:displayName')
+        BindStatus bindStatus = getBindStatus(attrs)
+        String beanName = BindStatusUtils.getBeanName(bindStatus)
+        def model = RequestContextUtils.getModelObject(getRequestContext(), request, beanName)
+        if (!model)
+        {
+            throw new IllegalStateException("Neither BindingResult nor plain target object for bean name '" +
+                    beanName + "' available as request attribute");
+        }
+        ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(), requestContext.getWebApplicationContext());
+        return metadataAccessor.getDisplayName(bindStatus.path)
+    }
+
+    Closure idFor = { attrs ->
+        getRequiredAttribute(attrs, 'path', 'g:fieldId')
+        return resolveId(attrs)
     }
 
     /**
@@ -425,7 +492,7 @@ class FormTagLib implements TagLibraryExt
             } else
             {
                 def selectedValue = value
-                if (ObjectUtils.nullSafeEquals(selectedValue,optionValue))
+                if (ObjectUtils.nullSafeEquals(selectedValue, optionValue))
                     isSelected = true
             }
 
@@ -434,8 +501,9 @@ class FormTagLib implements TagLibraryExt
                 anySelected = isSelected
         }
 
-        if (noSelection != null) {
-            allOptions.add(0,[value: getDisplayString(attrs,processFieldValue(selectName,noSelection.key,'option')), label: getDisplayString(attrs,noSelection.value), selected: !anySelected])
+        if (noSelection != null)
+        {
+            allOptions.add(0, [value: getDisplayString(attrs, processFieldValue(selectName, noSelection.key, 'option')), label: getDisplayString(attrs, noSelection.value), selected: !anySelected])
         }
 
         def wrappedBody = { ->
@@ -454,18 +522,18 @@ class FormTagLib implements TagLibraryExt
                     out << opt.label
                 }
                 optionAttrs.tagName = 'option'
-                if ( attrs.containsKey('optionDisabled') )
+                if (attrs.containsKey('optionDisabled'))
                     optionAttrs.disabled = Boolean.parseBoolean(attrs.optionDisabled.toString())
                 else
                     optionAttrs.remove('disabled')
 
-                out << g.elm(optionAttrs,optionBody)
+                out << g.elm(optionAttrs, optionBody)
                 out.println()
             }
         }
 
         attrs.tagName = 'select'
-        ['items','optionDisabled', 'noSelection'].each { attrs.remove(it)}
+        ['items', 'optionDisabled', 'noSelection'].each { attrs.remove(it) }
 
         fieldImpl(attrs, wrappedBody)
 
@@ -475,13 +543,12 @@ class FormTagLib implements TagLibraryExt
      * Generates HTML {@code <textarea> } tag.
      * If html escape is enabled, value will be html escaped.
      */
-    Closure textarea = { attrs,body ->
-        getRequiredAttribute(attrs,'path','<g:textarea>')
+    Closure textarea = { attrs, body ->
+        getRequiredAttribute(attrs, 'path', '<g:textarea>')
         attrs.tagName = 'textarea'
         attrs.value = processFieldValue(getName(attrs), getDisplayString(attrs, getBindStatus(attrs).value), attrs.type)
-        return fieldImpl(attrs,body)
+        return fieldImpl(attrs, body)
     }
-
 
     /**
      * Determines the display value of the supplied {@code Object},
@@ -533,8 +600,8 @@ class FormTagLib implements TagLibraryExt
     /**
      * Checks if the tag attributes contains the given attribute name. If not, throws error. If attribute is found,
      * its value is returned.
-     * @param attrs  provided tag attributes
-     * @param name  attribute name to look for
+     * @param attrs provided tag attributes
+     * @param name attribute name to look for
      * @param tagName name of the current tag used to display the error message
      */
     Object getRequiredAttribute(Map attrs, String name, String tagName)
@@ -672,7 +739,7 @@ class FormTagLib implements TagLibraryExt
     }
 
     /**
-     * Process the field value with the {@link RequestDataValueProcessor } if one can be resolved from the
+     * Process the field value with the {@link RequestDataValueProcessor} if one can be resolved from the
      * {@link org.springframework.web.servlet.support.RequestContext#getRequestDataValueProcessor()}
      */
     protected String processFieldValue(String name, String value, String type)
@@ -695,5 +762,91 @@ class FormTagLib implements TagLibraryExt
         return SelectedValueComparator.isSelected(bindStatus, value);
     }
 
+    /**
+     * Resolve the value of the '{@code action}' attribute.
+     * <p>If the user configured an '{@code action}' value then the result of
+     * evaluating this value is used. If the user configured an
+     * '{@code servletRelativeAction}' value then the value is prepended
+     * with the context and servlet paths, and the result is used. Otherwise, the
+     * {@link org.springframework.web.servlet.support.RequestContext#getRequestUri()
+     * originating URI} is used.
+     * @return the value that is to be used for the '{@code action}' attribute
+     */
+    protected String resolveFormAction(Map attrs)
+    {
+        RequestContext requestContext = getRequestContext()
+        String action = attrs.remove('action')
+        String servletRelativeAction = attrs.remove('servletRelativeAction')
+        if (action)
+        {
+            action = getDisplayString(attrs, action);
+            return processAction(attrs, action);
+        } else if (StringUtils.hasText(servletRelativeAction))
+        {
+            String pathToServlet = requestContext.getPathToServlet();
+            if (servletRelativeAction.startsWith("/") &&
+                    !servletRelativeAction.startsWith(requestContext.getContextPath()))
+            {
+                servletRelativeAction = pathToServlet + servletRelativeAction;
+            }
+            servletRelativeAction = getDisplayString(attrs, servletRelativeAction);
+            return processAction(attrs,servletRelativeAction);
+        } else
+        {
+            String requestUri = requestContext.getRequestUri();
+            String encoding = response.getCharacterEncoding();
+            try
+            {
+                requestUri = UriUtils.encodePath(requestUri, encoding);
+            }
+            catch (UnsupportedEncodingException ex)
+            {
+                // shouldn't happen - if it does, proceed with requestUri as-is
+            }
 
+            if (response instanceof HttpServletResponse)
+            {
+                requestUri = ((HttpServletResponse) response).encodeURL(requestUri);
+                String queryString = requestContext.getQueryString();
+                if (StringUtils.hasText(queryString))
+                {
+                    requestUri += "?" + htmlEscape(queryString);
+                }
+            }
+            if (StringUtils.hasText(requestUri))
+            {
+                return processAction(attrs,requestUri);
+            } else
+            {
+                throwTagError("Attribute 'action' is required. " +
+                        "Attempted to resolve against current request URI but request URI was null.");
+            }
+        }
+    }
+
+    /**
+     * Process the action through a {@link RequestDataValueProcessor} instance
+     * if one is configured or otherwise returns the action unmodified.
+     */
+    private String processAction(Map attrs, String action)
+    {
+        RequestDataValueProcessor processor = getRequestContext().getRequestDataValueProcessor();
+        if (processor != null)
+        {
+            action = processor.processAction(request, action, getHttpMethod(attrs));
+        }
+        return action;
+    }
+
+    /**
+     * Gets the http method attribute for the current form tag.
+     * @param attrs current tag attributes
+     * @return provided 'method' attribute value. if given value is not 'get' or 'post', returns 'post' by default.
+     */
+    String getHttpMethod(Map attrs)
+    {
+        String method = attrs.method ?: ''
+        if (!['get', 'post'].any { it.equalsIgnoreCase(method) })
+            method = DEFAULT_METHOD
+    }
 }

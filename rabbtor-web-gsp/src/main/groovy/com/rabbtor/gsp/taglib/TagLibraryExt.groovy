@@ -83,6 +83,7 @@ trait TagLibraryExt extends TagLibrary
 
     boolean isHtmlEscape(Map attrs)
     {
+
         Boolean htmlEscape = attrs?.get('htmlEscape')
         if (htmlEscape == null)
             htmlEscape = isDefaultHtmlEscape()
@@ -127,7 +128,7 @@ trait TagLibraryExt extends TagLibrary
     String htmlEscape(Map attrs,String content)
     {
         String out = content;
-        if (isHtmlEscape(attrs))
+        if (attrs == null || isHtmlEscape(attrs))
         {
             if (isResponseEncodedHtmlEscape())
             {
@@ -142,6 +143,11 @@ trait TagLibraryExt extends TagLibrary
             }
         }
         return out;
+    }
+
+    String htmlEscape(String content)
+    {
+        return htmlEscape(null,content)
     }
 
     /**
@@ -208,6 +214,14 @@ trait TagLibraryExt extends TagLibrary
             return boolValue
         }
         return false
+    }
+
+    String nextElementId(String name) {
+        String attributeName = TagLibraryExt.name + '.' + name;
+        Integer currentCount = (Integer) pageScope[attributeName]
+        currentCount = (currentCount != null ? currentCount + 1 : 1);
+        pageScope[attributeName] = currentCount
+        return (name + currentCount);
     }
 
 

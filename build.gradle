@@ -30,7 +30,7 @@ apply plugin: 'idea'
 ext {
     bintrayPublish = true
     // Sets release version
-    rabbtorVersion = '1.0.0'
+    rabbtorVersion = '1.0.1.BUILD-SNAPSHOT'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 

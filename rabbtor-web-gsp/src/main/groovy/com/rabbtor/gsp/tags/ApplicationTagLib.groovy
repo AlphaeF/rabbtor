@@ -20,19 +20,25 @@ import com.rabbtor.gsp.util.GspIncludeUtils
 import com.rabbtor.web.servlet.support.IncludeStatusException
 import com.rabbtor.web.servlet.support.RequestIncludeWrapper
 import com.rabbtor.web.servlet.support.RequestParams
+import com.rabbtor.web.servlet.util.UrlType
+import com.rabbtor.web.servlet.util.UrlUtils
 import grails.config.Settings
 import grails.core.GrailsApplication
 import grails.core.support.GrailsApplicationAware
 import grails.gsp.TagLib
 import groovy.transform.CompileStatic
 import org.grails.encoder.Encoder
+import org.grails.taglib.GrailsTagException
 import org.grails.taglib.GroovyPageAttributes
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.*
 import org.springframework.context.support.DefaultMessageSourceResolvable
 import org.springframework.core.convert.ConversionService
+import org.springframework.util.StringUtils
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder
+import org.springframework.web.util.JavaScriptUtils
+import org.springframework.web.util.UriUtils
 
 /**
  * Implementation of common GSP tags.
@@ -44,7 +50,10 @@ class ApplicationTagLib implements
         GrailsApplicationAware,
         TagLibraryExt
 {
-    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message']
+
+
+
+    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message','url']
     //static encodeAsForTags = ['include', 'none']
 
 
@@ -315,14 +324,166 @@ class ApplicationTagLib implements
         ''
     }
 
+    def url = { Map attrs ->
+
+        if (!attrs.containsKey('value'))
+            throwTagError("value attribute is required for <g:url>")
+
+        String value = attrs.remove('value') ?: ''
+        String context = attrs.context
+
+        // if context given, fix it
+        if (context && !context.startsWith('/'))
+            context = '/'+context
+
+        UrlType type = UrlUtils.determineUrlType(value)
+
+
+        StringBuilder url = new StringBuilder();
+        if (type == UrlType.CONTEXT_RELATIVE) {
+            // add application context to url
+            if (context == null) {
+                url.append(request.getContextPath());
+            }
+            else {
+                if (context.endsWith("/")) {
+                    url.append(context.substring(0, context.length() - 1));
+                }
+                else {
+                    url.append(context);
+                }
+            }
+        }
+
+        Set<String> templateParams = new HashSet()
+        def params = attrs.remove('params') ?: []
+
+
+        if (type != UrlType.RELATIVE && type != UrlType.ABSOLUTE && !value.startsWith("/")) {
+            url.append("/");
+        }
+        url.append(replaceUriTemplateParams(value, params , templateParams));
+        url.append(createQueryString(params, templateParams, (url.indexOf("?") == -1)));
+
+        String urlStr = url.toString();
+        if (type != UrlType.ABSOLUTE) {
+            // Add the session identifier if needed
+            // (Do not embed the session identifier in a remote link!)
+            urlStr = response.encodeURL(urlStr);
+        }
+
+        // HTML and/or JavaScript escape, if demanded.
+        urlStr = htmlEscape(attrs,urlStr);
+        urlStr = attrs.javaScriptEscape ? JavaScriptUtils.javaScriptEscape(urlStr) : urlStr;
+
+        attrs.remove('javaScriptEscape')
+
+        return urlStr;
+    }
+
+    /**
+     * Replace template markers in the URL matching available parameters. The
+     * name of matched parameters are added to the used parameters set.
+     * <p>Parameter values are URL encoded.
+     * @param uri the URL with template parameters to replace
+     * @param params parameters used to replace template markers
+     * @param usedParams set of template parameter names that have been replaced
+     * @return the URL with template parameters replaced
+     */
+    protected String replaceUriTemplateParams(String uri, List<List> params, Set<String> usedParams) {
+
+        String encoding = response.getCharacterEncoding();
+        params.each { param->
+            def paramName = param[0].toString()
+            String template = URL_TEMPLATE_DELIMITER_PREFIX + param[0] + URL_TEMPLATE_DELIMITER_SUFFIX;
+            if (uri.contains(template)) {
+                usedParams.add(paramName);
+                try {
+                    uri = uri.replace(template, UriUtils.encodePath(param[1]?.toString(), encoding));
+                }
+                catch (UnsupportedEncodingException ex) {
+                    throw new GrailsTagException(ex)
+                }
+            }
+            else {
+                template = URL_TEMPLATE_DELIMITER_PREFIX + "/" + paramName + URL_TEMPLATE_DELIMITER_SUFFIX;
+                if (uri.contains(template)) {
+                    usedParams.add(paramName);
+                    try {
+                        uri = uri.replace(template, UriUtils.encodePathSegment(param[1]?.toString(), encoding));
+                    }
+                    catch (UnsupportedEncodingException ex) {
+                        throw new GrailsTagException(ex)
+                    }
+                }
+            }
+        }
+        return uri;
+    }
+
+    /**
+     * Build the query string from available parameters that have not already
+     * been applied as template params.
+     * <p>The names and values of parameters are URL encoded.
+     * @param params the parameters to build the query string from
+     * @param usedParams set of parameter names that have been applied as
+     * template params
+     * @param includeQueryStringDelimiter true if the query string should start
+     * with a '?' instead of '&'
+     * @return the query string
+     */
+    protected String createQueryString(List<List> params, Set<String> usedParams, boolean includeQueryStringDelimiter) {
+
+        String encoding = response.getCharacterEncoding();
+        StringBuilder qs = new StringBuilder();
+        params.each { List param ->
+            def paramName = param[0].toString()
+            if (!usedParams.contains(paramName) && StringUtils.hasLength(paramName)) {
+                if (includeQueryStringDelimiter && qs.length() == 0) {
+                    qs.append("?");
+                }
+                else {
+                    qs.append("&");
+                }
+                try {
+                    qs.append(UriUtils.encodeQueryParam(paramName, encoding));
+                    if (param[1] != null) {
+                        qs.append("=");
+                        qs.append(UriUtils.encodeQueryParam(param[1]?.toString(), encoding));
+                    }
+                }
+                catch (UnsupportedEncodingException ex) {
+                    throw new GrailsTagException(ex)
+                }
+            }
+        }
+        return qs.toString();
+    }
+
+    def javascript = { Map attrs, body ->
+        def src = attrs.src
+        if (!src)
+            throwTagError("src attribute for <g:javascript /> is required.")
+
+        def urlattrs = new GroovyPageAttributes(attrs.subMap(['htmlEscape','context']))
+        urlattrs['value'] = src;
+
+        src = attrs.src = g.url(urlattrs)
+        attrs.type = 'text/javascript'
+        attrs.tagName ='script'
+        out << g.elm(attrs,body)
+    }
+
 
     private List encodeArgsIfRequired(arguments) {
         arguments.collect { value ->
             if (value == null || value instanceof Number || value instanceof Date) {
                 value
             } else {
-                htmlEscape(value)
+                htmlEscape([htmlEscape:true],value)
             }
         }
     }
+
+
 }
