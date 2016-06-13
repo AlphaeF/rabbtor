@@ -30,7 +30,7 @@ apply plugin: 'idea'
 ext {
     bintrayPublish = true
     // Sets release version
-    rabbtorVersion = '1.0.0-beta'
+    rabbtorVersion = '1.0.0-rc-1'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 
@@ -143,13 +143,11 @@ subprojects { project ->
 
     }
 
-    if (project.name == 'rabbtor-web-example')
-        return
-
     apply plugin: 'license'
 
     license {
         header rootProject.file('LICENSE.txt')
+        ignoreFailures = true
         ext.year = Calendar.getInstance().get(Calendar.YEAR)
         ext.name = 'Rabbytes Incorporated'
         ext.email = 'info@rabbytes.com'
@@ -165,7 +163,9 @@ subprojects { project ->
                 '**/ResponseIncludeWrapper.*',
                 '**/RequestIncludeHelper.*',
                 '**/TagLibraryExt.*',
-                '**/FormTagLib.*'
+                '**/FormTagLib.*',
+                '**/UrlUtils.*',
+                '**/UrlType.*'
 
         ])
     }
@@ -293,6 +293,10 @@ subprojects { project ->
 
             // Testing
             testCompile "junit:junit:${junitVersion}"
+
+            testCompile ("org.springframework:spring-test:${springVersion}") {
+                exclude group:'*'
+            }
 
             // Required by Spock's Mocking
             testCompile "cglib:cglib-nodep:${cglibVersion}"

@@ -19,5 +19,6 @@ dependencies {
     compile (project(':rabbtor-gsp'))
     compile (project(':rabbtor-web'))
 
+    testCompile 'org.jsoup:jsoup:1.9.2'
 
 }

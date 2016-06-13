@@ -18,15 +18,30 @@
 
 package com.rabbtor.gsp.taglib
 
+import com.rabbtor.gsp.util.GspTagUtils
 import grails.artefact.TagLibrary
 import groovy.transform.CompileStatic
 import org.grails.buffer.GrailsPrintWriter
 import org.grails.encoder.CodecLookup
 import org.grails.encoder.Encoder
+import org.grails.taglib.GroovyPageAttributes
+import org.grails.web.servlet.mvc.GrailsWebRequest
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.convert.ConversionService
 import org.springframework.util.ObjectUtils
+import org.springframework.validation.BeanPropertyBindingResult
+import org.springframework.validation.BindingResult
+import org.springframework.validation.DataBinder
+import org.springframework.web.bind.WebDataBinder
+import org.springframework.web.bind.support.DefaultDataBinderFactory
+import org.springframework.web.bind.support.WebDataBinderFactory
+import org.springframework.web.bind.support.WebRequestDataBinder
+import org.springframework.web.context.request.NativeWebRequest
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter
 import org.springframework.web.servlet.support.RequestContext
 import org.springframework.web.util.HtmlUtils
+import org.springframework.web.util.JavaScriptUtils
 
 /**
  * GSP tag library extension trait which provides addional utilities to tag library implementors.
@@ -81,14 +96,20 @@ trait TagLibraryExt extends TagLibrary
         return result
     }
 
+    /**
+     * Checks if 'htmlEscape' attribute is enabled within the given attributes.
+     * If not, default value of the RequestContext is used.
+     *
+     * @param attrs current tag attributes
+     * @return whether html escaping should be enabled for the calling tag
+     *
+     * @see #isDefaultHtmlEscape()
+     */
     boolean isHtmlEscape(Map attrs)
     {
-
-        Boolean htmlEscape = attrs?.get('htmlEscape')
-        if (htmlEscape == null)
-            htmlEscape = isDefaultHtmlEscape()
-
-        htmlEscape
+        if (!attrs || !attrs.containsKey(GspTagUtils.HTML_ESCAPE_ATTR_NAME))
+            return isDefaultHtmlEscape()
+        return getHtmlBooleanAttributeValue(attrs, GspTagUtils.HTML_ESCAPE_ATTR_NAME)
     }
 
     /**
@@ -116,16 +137,17 @@ trait TagLibraryExt extends TagLibrary
     }
 
     /**
-     * HTML-encodes the given String, only if the "htmlEscape" setting is enabled.
+     * HTML-encodes the given String, only if the "htmlEscape" setting is enabled
+     * in the given tag attributes.
+     * <p>If not, then requestContext default value will be used</p>
      * <p>The response encoding will be taken into account if the
      * "responseEncodedHtmlEscape" setting is enabled as well.
      * @param content the String to escape
      * @return the escaped String
-     * @since 4.1.2
-     * @see #isHtmlEscape()
+     * @see #isHtmlEscape(java.util.Map)
      * @see #isResponseEncodedHtmlEscape()
      */
-    String htmlEscape(Map attrs,String content)
+    String htmlEscape(Map attrs, String content)
     {
         String out = content;
         if (attrs == null || isHtmlEscape(attrs))
@@ -135,41 +157,42 @@ trait TagLibraryExt extends TagLibrary
                 out = HtmlUtils.htmlEscape(content, response.characterEncoding);
             } else
             {
-                Encoder htmlEncoder = codecLookup?.lookupEncoder('HTML')
-                if (htmlEncoder)
-                    out = htmlEncoder.encode(content)
-                else
-                    out = HtmlUtils.htmlEscape(content);
+                out = HtmlUtils.htmlEscape(content);
             }
         }
         return out;
     }
 
+    /**
+     * HTML encodes the given String
+     * @param content
+     * @return
+     */
     String htmlEscape(String content)
     {
-        return htmlEscape(null,content)
+        return htmlEscape(null, content)
     }
 
     /**
      * Render GSP tag attributes
      * @param attrs attribute map
-     * @param writer  response writer
+     * @param writer response writer
      * @param suppressAttrs list of attributes which are for internal use and must not be rendered
      */
     @CompileStatic
-    void outputAttributes(Map attrs, GrailsPrintWriter writer, List<String> suppressAttrs)
+    void outputAttributes(Map attrs, GrailsPrintWriter writer, Iterable<String> suppressAttrs)
     {
-        def suppress = suppressAttrs?.collectEntries {[(it):true] } ?: [:]
+        def suppress = suppressAttrs?.collectEntries { [(it): true] } ?: [:]
         suppress.tagName = true
         suppress.htmlEscape = true
 
-        ['disabled','readonly','checked'].each {
-            fixHtmlBooleanAttributeValue(attrs,it)
+        ['disabled', 'readonly', 'checked'].each {
+            fixHtmlBooleanAttributeValue(attrs, it)
         }
 
-        attrs.findAll { !suppress.containsKey(it.key)}.each { k, v ->
+        attrs.findAll { !suppress.containsKey(it.key) }.each { k, v ->
             writer << ' ' + k
-            if ( v != null )
+            if (v != null)
             {
                 writer << '="'
                 writer << ObjectUtils.getDisplayString(v)
@@ -184,9 +207,9 @@ trait TagLibraryExt extends TagLibrary
      * @param attrs
      * @param attributeName
      */
-    void fixHtmlBooleanAttributeValue(Map attrs,String attributeName)
+    void fixHtmlBooleanAttributeValue(Map attrs, String attributeName)
     {
-        if (getHtmlBooleanAttributeValue(attrs,attributeName))
+        if (getHtmlBooleanAttributeValue(attrs, attributeName))
             attrs[attributeName] = attributeName
         else
             attrs.remove(attributeName)
@@ -200,15 +223,21 @@ trait TagLibraryExt extends TagLibrary
      * @param attrs attributes of the calling tag
      * @param attributeName 'disabled','readonly', etc.
      */
-    boolean getHtmlBooleanAttributeValue(Map attrs,String attributeName) {
-        if (attrs.containsKey(attributeName)) {
-            Object value = attrs.get(attributeName) ?: true
-            boolean boolValue = false
+    boolean getHtmlBooleanAttributeValue(Map attrs, String attributeName)
+    {
+        if (attrs.containsKey(attributeName))
+        {
+            Object value = attrs.get(attributeName)
+            boolean boolValue = true
             if (value instanceof Boolean)
-                boolValue = ((Boolean)value).booleanValue()
-            else {
-                String valueStr = value.toString()
-                boolValue = attributeName.equalsIgnoreCase(valueStr) || Boolean.valueOf(valueStr).booleanValue()
+                boolValue = ((Boolean) value).booleanValue()
+            else
+            {
+                String valueStr = value?.toString()
+                if (!valueStr)
+                    boolValue = true
+                else
+                    boolValue = attributeName.equalsIgnoreCase(valueStr) || Boolean.valueOf(valueStr).booleanValue()
             }
 
             return boolValue
@@ -216,7 +245,15 @@ trait TagLibraryExt extends TagLibrary
         return false
     }
 
-    String nextElementId(String name) {
+    /**
+     * Generates incremental id's for the given attribute name
+     * Counter is stored with the given name in page scope.
+     * Mainly used for html checkbox and radio element id generation since they may have the same name
+     * @param name attribute name on which a counter will be incremented
+     * @return auto generated elment id unique for the given name within the current page scope
+     */
+    String nextElementId(String name)
+    {
         String attributeName = TagLibraryExt.name + '.' + name;
         Integer currentCount = (Integer) pageScope[attributeName]
         currentCount = (currentCount != null ? currentCount + 1 : 1);
@@ -225,4 +262,72 @@ trait TagLibraryExt extends TagLibrary
     }
 
 
+    GroovyPageAttributes asGroovyAttrs(Map attrs)
+    {
+        attrs instanceof GroovyPageAttributes ? (GroovyPageAttributes) attrs : new GroovyPageAttributes(attrs)
+    }
+
+    boolean isJavascriptEscape(Map attrs)
+    {
+        if (!attrs)
+            return false
+        attrs.containsKey('javaScriptEscape') ?
+                getHtmlBooleanAttributeValue(attrs, 'javaScriptEscape') : getHtmlBooleanAttributeValue(attrs, 'javascriptEscape')
+    }
+
+    String javascriptEscape(String text)
+    {
+        return javascriptEscape(null, text)
+    }
+
+    String javascriptEscape(Map attrs, String text)
+    {
+        if (!text)
+            return text;
+
+        if (attrs == null || isJavascriptEscape(attrs))
+            JavaScriptUtils.javaScriptEscape(text)
+        else
+            text
+    }
+
+    DataBinder createBinder(Object target, String objectName)
+    {
+        WebRequestDataBinder binder = new WebRequestDataBinder(target,objectName)
+        NativeWebRequest webRequest = GrailsWebRequest.lookup(request)
+        if (!webRequest)
+            webRequest = GrailsWebRequest.lookup()
+        if (!webRequest)
+        {
+            def attrs = RequestContextHolder.currentRequestAttributes()
+            if (attrs instanceof NativeWebRequest)
+                webRequest = (NativeWebRequest) attrs
+        }
+
+        if (webRequest && applicationContext)
+        {
+            def adapter = applicationContext.getBeansOfType(RequestMappingHandlerAdapter).values()[0]
+            if (adapter)
+            {
+                adapter.webBindingInitializer?.initBinder(binder,webRequest)
+            }
+        }
+
+        if (binder.conversionService == null && applicationContext) {
+            def conversionService = applicationContext.getBeansOfType(ConversionService).values()[0]
+            if (conversionService)
+                binder.conversionService = conversionService
+        }
+
+        binder
+    }
+
+    ConversionService getConversionService() {
+        if (applicationContext)
+        {
+
+        }
+        return applicationContext?.getBeansOfType(ConversionService).values()[0]
+
+    }
 }

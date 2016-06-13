@@ -12,17 +12,22 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Rabbytes Incorporated.
  */
-package com.rabbtor.example.web.tags
 
-import grails.gsp.TagLib
+package com.rabbtor.gsp.util
 
-@TagLib
-class MyTagLib
+import com.rabbtor.model.ModelMetadataAccessor
+import com.rabbtor.model.ModelMetadataAccessorUtils
+import groovy.transform.CompileStatic
+import org.springframework.context.ApplicationContext
+import org.springframework.web.context.support.WebApplicationContextUtils
+import org.springframework.web.servlet.support.BindStatus
+
+import javax.servlet.http.HttpServletRequest;
+
+@CompileStatic
+public class GspTagUtils
 {
-    static namespace = 'my'
+    public static String HTML_ESCAPE_ATTR_NAME = 'htmlEscape';
 
-    def testSet = { attrs ->
-        g.set(attrs)
-        out << "testSet done"
-    }
+
 }

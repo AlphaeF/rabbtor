@@ -26,6 +26,7 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.support.JspAwareRequestContext;
 import org.springframework.web.servlet.support.RequestContext;
+import org.springframework.web.servlet.tags.form.FormTag;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -49,9 +50,9 @@ public class FormFunctions
 
     public static String propertyDisplayName(String path, PageContext pageContext, RequestContext requestContext) {
         try {
-            Object model = getModelObject(requestContext,path,pageContext);
+            Object model = getModelObject(requestContext,pageContext);
             ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(),requestContext.getWebApplicationContext());
-            String[] codes = metadataAccessor.getModelNameCodes(path);
+            String[] codes = metadataAccessor.getModelNameCodes(path, getBeanName(pageContext));
             MessageSourceResolvable messageSourceResolvable = new DefaultMessageSourceResolvable(codes,metadataAccessor.getDisplayName(path));
             return requestContext.getMessage(messageSourceResolvable);
         }
@@ -65,6 +66,11 @@ public class FormFunctions
         }
     }
 
+    private static String getBeanName(PageContext pageContext)
+    {
+        return (String) pageContext.getRequest().getAttribute(FormTag.MODEL_ATTRIBUTE_VARIABLE_NAME);
+    }
+
 
     private static RequestContext getRequestContext(PageContext pageContext)
     {
@@ -76,22 +82,11 @@ public class FormFunctions
         return requestContext;
     }
 
-    public static String nestedFormPath(PageContext pageContext) {
-        return (String) pageContext.getAttribute(NESTED_PATH_VARIABLE_NAME, PageContext.REQUEST_SCOPE);
-    }
 
-    public static String boundPath(PageContext pageContext,String path) {
-        String nestedPath = nestedFormPath(pageContext);
-        String pathToUse = (nestedPath != null ? nestedPath + path : path);
-        if (pathToUse.endsWith(PropertyAccessor.NESTED_PROPERTY_SEPARATOR)) {
-            pathToUse = pathToUse.substring(0, pathToUse.length() - 1);
-        }
-        return pathToUse;
-    }
 
-    public static Object getModelObject(RequestContext requestContext,String path,PageContext pageContext) throws JspException
+    public static Object getModelObject(RequestContext requestContext,PageContext pageContext) throws JspException
     {
-        String beanName = beanNameFromBoundPath(boundPath(pageContext,path));
+        String beanName = getBeanName(pageContext);
         Object modelObject = RequestContextUtils.getModelObject(requestContext,(HttpServletRequest)pageContext.getRequest(),beanName);
 
         if (modelObject == null) {
@@ -103,16 +98,5 @@ public class FormFunctions
 
     }
 
-    public static String beanNameFromBoundPath(String boundPath) {
-        String beanName;
-        int dotPos = boundPath.indexOf('.');
-        if (dotPos == -1) {
-            // property not set, only the object itself
-            beanName = boundPath;
-        }
-        else {
-            beanName = boundPath.substring(0, dotPos);
-        }
-        return beanName;
-    }
+
 }

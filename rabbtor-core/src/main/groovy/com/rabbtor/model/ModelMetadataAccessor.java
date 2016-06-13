@@ -29,7 +29,7 @@ public interface ModelMetadataAccessor
 
     String getModelName();
 
-    void setModelName(String modelName);
+    Class<?> getModelType();
 
 
 }

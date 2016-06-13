@@ -22,30 +22,32 @@ package com.rabbtor.gsp.tags
 import com.rabbtor.gsp.taglib.TagLibraryExt
 import com.rabbtor.model.ModelMetadataAccessor
 import com.rabbtor.model.ModelMetadataAccessorUtils
-import com.rabbtor.web.servlet.support.RequestParams
-import com.rabbtor.web.servlet.util.BindStatusUtils
+import com.rabbtor.web.servlet.model.WebModelMetadataUtils
 import com.rabbtor.web.servlet.util.RequestContextUtils
 import grails.gsp.TagLib
+import groovy.transform.CompileStatic
 import org.grails.encoder.CodecLookup
 import org.grails.taglib.GroovyPageAttributes
 import org.springframework.beans.BeanWrapper
 import org.springframework.beans.PropertyAccessor
 import org.springframework.beans.PropertyAccessorFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.MessageSourceResolvable
+import org.springframework.context.support.DefaultMessageSourceResolvable
 import org.springframework.core.convert.ConversionService
 import org.springframework.util.ObjectUtils
 import org.springframework.util.StringUtils
+import org.springframework.validation.BindingResult
+import org.springframework.validation.DataBinder
 import org.springframework.web.bind.WebDataBinder
 import org.springframework.web.servlet.support.BindStatus
 import org.springframework.web.servlet.support.RequestContext
 import org.springframework.web.servlet.support.RequestDataValueProcessor
 import org.springframework.web.servlet.tags.form.SelectedValueComparator
 import org.springframework.web.servlet.tags.form.ValueFormatter
-import org.springframework.web.util.HtmlUtils
 import org.springframework.web.util.UriUtils
 
 import javax.servlet.ServletRequest
-import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import java.beans.PropertyEditor
@@ -91,7 +93,7 @@ import java.beans.PropertyEditor
 @TagLib
 class FormTagLib implements TagLibraryExt
 {
-    static returnObjectForTags = ['displayNameFor','idFor']
+    static returnObjectForTags = ['displayNameFor', 'idFor']
 
     /** The default HTTP method using which form values are sent to the server: "post" */
     private static final String DEFAULT_METHOD = "post";
@@ -115,6 +117,12 @@ class FormTagLib implements TagLibraryExt
     public static
     final String MODEL_ATTRIBUTE_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.${MODEL_ATTRIBUTE}"
 
+    public static
+    final String MODEL_OBJECT_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.modelObject"
+
+    public static
+    final String DATA_BINDER_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.dataBinder"
+
 
     @Autowired(required = false)
     ConversionService conversionService
@@ -129,6 +137,22 @@ class FormTagLib implements TagLibraryExt
         String modelAttribute = (attrs.remove(MODEL_ATTRIBUTE) ?: attrs.remove('commandName')) ?: DEFAULT_COMMAND_NAME
         request.setAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, modelAttribute)
 
+        Object modelObject = request.getAttribute(MODEL_OBJECT_VARIABLE_NAME)
+        if (modelObject == null)
+        {
+            modelObject = RequestContextUtils.getModelObject(requestContext, request, modelAttribute)
+            if (modelObject)
+            {
+                request.setAttribute(MODEL_OBJECT_VARIABLE_NAME, modelObject)
+
+                // in mvc environment, this should not happen because RequestMappingHandlerAdapter uses ModelFactory to add a default bindingResult
+                if (requestContext.getErrors(modelAttribute) == null)
+                    request.setAttribute(DATA_BINDER_VARIABLE_NAME, createBinder(modelObject, modelAttribute))
+            }
+
+
+        }
+
         // Save previous nestedPath value, build and expose current nestedPath value.
         // Use request scope to expose nestedPath to included pages too.
         String previousNestedPath =
@@ -141,16 +165,15 @@ class FormTagLib implements TagLibraryExt
 
         def action = attrs.action
         String actionStr = null
-        if (action instanceof Map) {
+        if (action instanceof Map)
+        {
             actionStr = processAction(attrs, g.mvcUrl(new GroovyPageAttributes((Map) action)))
-        }
-        else
+        } else
         {
             actionStr = resolveFormAction(attrs)
         }
 
         attrs.action = actionStr
-
 
         // AJAX
         if (attrs.containsKey('ajax'))
@@ -164,7 +187,10 @@ class FormTagLib implements TagLibraryExt
         out << g.elm(attrs, body)
 
         // cleanup
-        request.removeAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME);
+        request.removeAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME)
+        request.removeAttribute(MODEL_OBJECT_VARIABLE_NAME)
+        request.removeAttribute(DATA_BINDER_VARIABLE_NAME)
+
         if (previousNestedPath != null)
         {
             // Expose previous nestedPath value.
@@ -188,7 +214,7 @@ class FormTagLib implements TagLibraryExt
         if (ajax && ajax instanceof Map)
         {
             ajax.each {
-                attrs["data-ajax-${it.key}"] = htmlEscape(ValueFormatter.getDisplayString(it.value,false))
+                attrs["data-ajax-${it.key}"] = htmlEscape(ValueFormatter.getDisplayString(it.value, false))
             }
         }
     }
@@ -205,13 +231,14 @@ class FormTagLib implements TagLibraryExt
     Closure input = { attrs, body ->
         getRequiredAttribute(attrs, 'path', 'g:input')
 
-        attrs.type = attrs.type ?: 'text'
+        attrs.type = (attrs.type ?: 'text').toLowerCase(Locale.US)
 
         def bindStatus = getBindStatus(attrs)
         def value = attrs.value
+
         def boundValue = bindStatus.value
 
-        if (attrs.type == 'checkbox')
+        if ('checkbox'.equalsIgnoreCase(attrs.type))
         {
             if (!getHtmlBooleanAttributeValue(attrs, 'disabled'))
             {
@@ -220,9 +247,11 @@ class FormTagLib implements TagLibraryExt
                 hiddenAttrs.value = processFieldValue(hiddenAttrs.name, 'on', attrs.type)
                 hiddenAttrs.type = 'hidden'
                 hiddenAttrs.tagName = 'input'
-
                 out << g.elm(hiddenAttrs)
+                out << ' '
             }
+
+
         }
 
         if (isSingleSelectTag(attrs.type))
@@ -233,11 +262,11 @@ class FormTagLib implements TagLibraryExt
 
             Class<?> valueType = bindStatus.getValueType();
 
-            if (Boolean.class == valueType || boolean.class == valueType)
+            if ('checkbox'.equalsIgnoreCase(attrs.type) && (Boolean.class == valueType || boolean.class == valueType))
             {
-                if (boundValue instanceof String)
+                if (!(boundValue instanceof Boolean) && boundValue != null)
                 {
-                    boundValue = Boolean.valueOf((String) boundValue);
+                    boundValue = Boolean.valueOf(boundValue.toString());
                 }
                 Boolean booleanValue = (boundValue != null ? (Boolean) boundValue : Boolean.FALSE);
                 attrs.checked = booleanValue
@@ -255,15 +284,29 @@ class FormTagLib implements TagLibraryExt
                 }
             }
         } else
-            attrs.value = processFieldValue(getName(attrs), getDisplayString(attrs, bindStatus.value), attrs.type)
+        {
+            boolean showValue = true
+            if ('password'.equalsIgnoreCase(attrs.type))
+            {
+                showValue = attrs.containsKey('showPassword') ? getHtmlBooleanAttributeValue(attrs, 'showPassword')
+                        : getHtmlBooleanAttributeValue(attrs, 'show')
+                attrs.remove('show')
+                attrs.remove('showPassword')
+            }
+            if (showValue)
+                attrs.value = processFieldValue(getName(attrs), getDisplayString(attrs, bindStatus.value), attrs.type)
+            else
+                attrs.value = processFieldValue(getName(attrs), '', attrs.type)
+        }
+
 
         attrs.tagName = 'input'
         return fieldImpl(attrs, body)
     }
 
-    boolean isSingleSelectTag(String type)
+    static boolean isSingleSelectTag(String type)
     {
-        type && ['checkbox', 'radio', 'select'].any {
+        type && ['checkbox', 'radio'].any {
             it.equalsIgnoreCase(type)
         }
     }
@@ -332,16 +375,17 @@ class FormTagLib implements TagLibraryExt
 
     Closure displayNameFor = { attrs ->
         getRequiredAttribute(attrs, 'path', 'g:displayName')
-        BindStatus bindStatus = getBindStatus(attrs)
-        String beanName = BindStatusUtils.getBeanName(bindStatus)
-        def model = RequestContextUtils.getModelObject(getRequestContext(), request, beanName)
+        def model = request.getAttribute(MODEL_OBJECT_VARIABLE_NAME)
         if (!model)
         {
-            throw new IllegalStateException("Neither BindingResult nor plain target object for bean name '" +
-                    beanName + "' available as request attribute");
+            throw new IllegalStateException("Could not retrive model object.Please make sure you called <g:displayNameFor> within a <g:form>");
         }
-        ModelMetadataAccessor metadataAccessor = ModelMetadataAccessorUtils.lookup(model.getClass(), requestContext.getWebApplicationContext());
-        return metadataAccessor.getDisplayName(bindStatus.path)
+        ModelMetadataAccessor metadataAccessor = WebModelMetadataUtils.retrieveMetadataAccessor(model.getClass(), request, applicationContext);
+        String propertyPath = getPropertyPath(attrs)
+        String[] codes = metadataAccessor.getModelNameCodes(propertyPath,request.getAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME));
+        MessageSourceResolvable messageSourceResolvable = new DefaultMessageSourceResolvable(codes,metadataAccessor.getDisplayName(propertyPath));
+
+        return getRequestContext().getMessage(messageSourceResolvable)
     }
 
     Closure idFor = { attrs ->
@@ -383,8 +427,7 @@ class FormTagLib implements TagLibraryExt
         def multiple = false
         if (attrs.containsKey('multiple'))
         {
-            multiple = (attrs.multiple ?: true).toString()
-            multiple = 'multiple'.equalsIgnoreCase(multiple) || Boolean.valueOf(multiple)
+            multiple = getHtmlBooleanAttributeValue(attrs, 'multiple')
         } else
         {
             if (path && forceMultiple(attrs))
@@ -552,20 +595,54 @@ class FormTagLib implements TagLibraryExt
      */
     protected String getDisplayString(Map attrs, Object value)
     {
-        if (attrs.path)
-        {
-            PropertyEditor editor = (value != null ? getBindStatus(attrs).findEditor(value.getClass()) : null);
+        PropertyEditor editor = getEditor(attrs, value)
+
+        if (editor)
             htmlEscape(attrs, ValueFormatter.getDisplayString(value, editor, false));
-        } else
-        {
+        else
             htmlEscape(attrs, ValueFormatter.getDisplayString(value, false))
-        }
+
     }
 
-    /**
-     * Returns '{@code true}' if the bound value requires the
-     * resultant '{@code select}' tag to be multi-select.
-     */
+    @CompileStatic
+    PropertyEditor getEditor(Map attrs, Object value)
+    {
+
+
+        BindStatus bindStatus = attrs.containsKey('path') ? getBindStatus(attrs) : null
+        PropertyEditor editor = null
+
+        if (bindStatus)
+        {
+            editor = bindStatus.getEditor()
+
+            if (!editor)
+            {
+                DataBinder binder = (DataBinder) request.getAttribute(DATA_BINDER_VARIABLE_NAME)
+                if (binder)
+                {
+                    BindingResult bindingResult = binder.bindingResult
+
+                    editor = bindingResult.findEditor(bindStatus.getPath(), null)
+                    if (!editor && value != null)
+                        bindingResult.findEditor(bindStatus.getPath(), value.getClass())
+
+                }
+            }
+
+            if (!editor && value != null)
+            {
+                editor = bindStatus.findEditor(value.getClass())
+            }
+        }
+
+        return editor
+    }
+
+/**
+ * Returns '{@code true}' if the bound value requires the
+ * resultant '{@code select}' tag to be multi-select.
+ */
     protected boolean forceMultiple(Map attrs)
     {
         BindStatus bindStatus = getBindStatus(attrs);
@@ -674,21 +751,28 @@ class FormTagLib implements TagLibraryExt
         if (attrs.bindStatus)
             return attrs.bindStatus
 
+        assert attrs.containsKey('path'), "path attribute must be set to get a BindStatus"
+
+        String pathToUse = getFullPath(attrs)
+        BindStatus bindStatus = getRequestContext().getBindStatus(pathToUse, false)
+        attrs.bindStatus = bindStatus
+        return bindStatus;
+    }
+
+    String getFullPath(Map attrs)
+    {
         String nestedPath = getNestedPath();
         String pathToUse = (nestedPath != null ? nestedPath + getPath(attrs) : getPath(attrs));
         if (pathToUse.endsWith(PropertyAccessor.NESTED_PROPERTY_SEPARATOR))
         {
             pathToUse = pathToUse.substring(0, pathToUse.length() - 1);
         }
-        BindStatus bindStatus = new BindStatus(getRequestContext(), pathToUse, false);
-        attrs.bindStatus = bindStatus
-        return bindStatus;
+        return pathToUse
     }
-
-    /**
-     * Overrides {@link TagLibraryExt#isDefaultHtmlEscape()} to return <code>true</code> if the default value resolved from the
-     * {@link org.springframework.web.servlet.support.RequestContext#getDefaultHtmlEscape()}  is null.
-     */
+/**
+ * Overrides {@link TagLibraryExt#isDefaultHtmlEscape()} to return <code>true</code> if the default value resolved from the
+ * {@link org.springframework.web.servlet.support.RequestContext#getDefaultHtmlEscape()}  is null.
+ */
     @Override
     boolean isDefaultHtmlEscape()
     {
@@ -794,7 +878,7 @@ class FormTagLib implements TagLibraryExt
                 servletRelativeAction = pathToServlet + servletRelativeAction;
             }
             servletRelativeAction = getDisplayString(attrs, servletRelativeAction);
-            return processAction(attrs,servletRelativeAction);
+            return processAction(attrs, servletRelativeAction);
         } else
         {
             String requestUri = requestContext.getRequestUri();
@@ -819,7 +903,7 @@ class FormTagLib implements TagLibraryExt
             }
             if (StringUtils.hasText(requestUri))
             {
-                return processAction(attrs,requestUri);
+                return processAction(attrs, requestUri);
             } else
             {
                 throwTagError("Attribute 'action' is required. " +

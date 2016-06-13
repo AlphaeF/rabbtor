@@ -31,8 +31,12 @@ public class RequestContextUtils
         }
 
         Map<String,Object> model = requestContext.getModel();
+        if (model == null)
+            return request.getAttribute(beanName);
+
         if (model.containsKey(beanName))
             return model.get(beanName);
+
 
         return null;
 

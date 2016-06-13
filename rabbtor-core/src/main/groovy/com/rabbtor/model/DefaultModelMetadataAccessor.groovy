@@ -18,7 +18,9 @@ import groovy.transform.CompileStatic;
 import org.springframework.util.Assert
 import org.springframework.util.ClassUtils
 import org.springframework.util.StringUtils
-import org.springframework.validation.Errors;
+import org.springframework.validation.Errors
+
+import java.util.concurrent.ConcurrentHashMap;
 
 @CompileStatic
 public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
@@ -117,10 +119,12 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
                 if (declaringModelName == null)
                     declaringModelName = createDefaultModelName(declaringModelMetadata)
             }
-
-            if (StringUtils.hasText(declaringModelName))
-                result << declaringModelName + Errors.NESTED_PATH_SEPARATOR + propertyName
+        } else {
+            declaringModelName = createDefaultModelName(getModelMetadata())
         }
+
+        if (StringUtils.hasText(declaringModelName))
+            result << declaringModelName + Errors.NESTED_PATH_SEPARATOR + propertyName
 
         if (modelName == null)
             modelName = createDefaultModelName(modelMetadata)
@@ -129,10 +133,9 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
         if (propertyPathWithoutIndexes.length() != propertyPath)
             result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPathWithoutIndexes
 
-        if (StringUtils.hasText(modelName))
-            result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPath
+        result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPath
 
-        result = result.reverse()
+        result = result.unique().reverse()
 
         result as String[]
     }
@@ -166,16 +169,9 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
         return createDefaultModelName(modelMetadata)
     }
 
-    @Override
-    void setModelName(String modelName)
-    {
-        Assert.notNull(modelName,"modelName must not be null.For empty model names, please use empty string(\"\").")
-        this.modelName = modelName;
-    }
-
     String createDefaultModelName(ModelMetadata modelMetadata)
     {
-        return ClassUtils.getShortNameAsProperty(modelMetadata.modelType)
+        return modelMetadata.modelName
     }
 
     String getPropertyNameFromPath(String propertyPath)
@@ -189,5 +185,10 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
             propName = propName.substring(lastDot+1,propName.length())
 
         return propName
+    }
+
+    Class getModelType()
+    {
+        return modelType
     }
 }
