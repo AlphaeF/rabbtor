@@ -14,7 +14,7 @@
  */
 package com.rabbtor.gsp.tags
 
-import com.rabbtor.gsp.taglib.AbstractTagLibTests
+import com.rabbtor.gsp.AbstractWebGspTests
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -24,7 +24,7 @@ import org.springframework.validation.BindingResult
 import org.springframework.validation.Validator
 
 @RunWith(SpringJUnit4ClassRunner)
-class ValidationTagLibTests extends AbstractTagLibTests
+class ValidationTagLibTests extends AbstractWebGspTests
 {
     @Autowired
     Validator validator

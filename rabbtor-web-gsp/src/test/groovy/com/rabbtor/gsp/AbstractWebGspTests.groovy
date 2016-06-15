@@ -12,7 +12,7 @@
  * is strictly forbidden unless prior written permission is obtained
  * from Rabbytes Incorporated.
  */
-package com.rabbtor.gsp.taglib
+package com.rabbtor.gsp
 
 import com.rabbtor.gsp.config.annotation.EnableWebGsp
 import com.rabbtor.gsp.config.annotation.GspSettings
@@ -45,7 +45,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc
 
 @WebAppConfiguration
 @ContextConfiguration
-abstract class AbstractTagLibTests extends GroovyTestCase
+abstract class AbstractWebGspTests extends GroovyTestCase
 {
     @Autowired
     ApplicationContext applicationContext

@@ -14,9 +14,7 @@
  */
 package com.rabbtor.gsp.tags
 
-import com.rabbtor.gsp.taglib.AbstractTagLibTests
-import com.rabbtor.model.annotation.DisplayName
-import com.rabbtor.model.annotation.Model
+import com.rabbtor.gsp.AbstractWebGspTests
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Entities
@@ -27,7 +25,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import org.springframework.web.util.HtmlUtils
 
 @RunWith(SpringJUnit4ClassRunner)
-class FormTagLibTests extends AbstractTagLibTests
+class FormTagLibTests extends AbstractWebGspTests
 {
     CarCommand cmd
 

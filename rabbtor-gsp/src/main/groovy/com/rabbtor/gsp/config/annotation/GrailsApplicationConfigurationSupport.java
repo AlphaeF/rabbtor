@@ -15,9 +15,9 @@
 package com.rabbtor.gsp.config.annotation;
 
 
+import com.rabbtor.gsp.StandaloneCodecLookup;
 import grails.core.StandaloneGrailsApplication;
 import org.grails.encoder.CodecLookup;
-import org.grails.encoder.impl.StandaloneCodecLookup;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;

@@ -111,6 +111,11 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
         return groovyPagesTemplateRenderer;
     }
 
+    @Bean
+    GrailsHoldersConfigurer grailsHoldersConfigurer() {
+        return new GrailsHoldersConfigurer();
+    }
+
 
 
 

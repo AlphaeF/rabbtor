@@ -14,7 +14,7 @@
  */
 package com.rabbtor.gsp.tags
 
-import com.rabbtor.gsp.taglib.AbstractTagLibTests
+import com.rabbtor.gsp.AbstractWebGspTests
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
@@ -24,7 +24,7 @@ import org.springframework.web.util.JavaScriptUtils
 import javax.servlet.http.Cookie
 
 @RunWith(SpringJUnit4ClassRunner)
-class ApplicationTagLibTests extends AbstractTagLibTests
+class ApplicationTagLibTests extends AbstractWebGspTests
 {
 
 
