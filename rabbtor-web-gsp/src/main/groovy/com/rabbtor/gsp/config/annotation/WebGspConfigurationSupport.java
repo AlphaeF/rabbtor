@@ -21,6 +21,7 @@ import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.GroovyPageLocator;
 import org.grails.plugins.web.taglib.RenderTagLib;
 import org.grails.plugins.web.taglib.SitemeshTagLib;
+import org.grails.web.gsp.GroovyPagesTemplateRenderer;
 import org.grails.web.gsp.io.CachingGrailsConventionGroovyPageLocator;
 import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
@@ -28,6 +29,7 @@ import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
 import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -101,6 +103,13 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
         return innerGspViewResolver;
     }
 
+
+    @Bean(autowire=Autowire.BY_NAME)
+    GroovyPagesTemplateRenderer groovyPagesTemplateRenderer() {
+        GroovyPagesTemplateRenderer groovyPagesTemplateRenderer = new GroovyPagesTemplateRenderer();
+        groovyPagesTemplateRenderer.setCacheEnabled(!gspTemplateEngineConfig().gspReloadingEnabled);
+        return groovyPagesTemplateRenderer;
+    }
 
 
 

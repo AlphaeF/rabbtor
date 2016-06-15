@@ -30,6 +30,7 @@ import grails.gsp.TagLib
 import groovy.transform.CompileStatic
 import org.grails.taglib.GrailsTagException
 import org.grails.taglib.GroovyPageAttributes
+import org.springframework.beans.PropertyAccessor
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.*
@@ -52,9 +53,8 @@ class ApplicationTagLib implements
 {
 
 
-    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'message', 'url', 'encode','cookie','header']
-
-    public static final String DEFAULT_ARGUMENT_SEPARATOR = ",";
+    static returnObjectForTags = ['set', 'mvcUrl', 'mvcPath', 'url',
+                                  'escape', 'cookie', 'header']
 
 
     ApplicationContext applicationContext
@@ -221,10 +221,42 @@ class ApplicationTagLib implements
         return url
     }
 
+    Closure nestedPath = { Map attrs, body ->
+        String path = attrs.remove('path')
+        if (path == null)
+        {
+            path = "";
+        }
+        if (path.length() > 0 && !path.endsWith(PropertyAccessor.NESTED_PROPERTY_SEPARATOR))
+        {
+            path += PropertyAccessor.NESTED_PROPERTY_SEPARATOR;
+        }
+
+        String previousNestedPath = GspTagUtils.beginNestedPath(path, request)
+
+        out << body()
+
+        GspTagUtils.endNestedPath(previousNestedPath, request)
+    }
+
+    Closure withHtmlEscape = { Map attrs, body ->
+        def oldValue = requestContext.defaultHtmlEscape
+        htmlEscape(attrs)
+        out << body()
+        requestContext.setDefaultHtmlEscape(oldValue)
+    }
+
+    Closure htmlEscape = { Map attrs, body ->
+
+        def value = !attrs.containsKey('defaultHtmlEscape') ? true : getHtmlBooleanAttributeValue(attrs,'defaultHtmlEscape')
+        requestContext.setDefaultHtmlEscape(value)
+
+    }
 
     Closure elm = { Map attrs, Closure body ->
         elmImpl(attrs, body)
     }
+
 
     @CompileStatic
     protected Object elmImpl(Map attrs, Closure body)
@@ -246,123 +278,8 @@ class ApplicationTagLib implements
         }
     }
 
-    /**
-     * Resolves a message code for a given error or code from the resource bundle.
-     *
-     * @emptyTag
-     *
-     * @attr message The object to lookup the message for. Objects must implement org.springframework.context.MessageSourceResolvable.
-     * @attr code The code to lookup the message for. Used for custom application messages.
-     * @attr args|arguments A list of argument values to apply to the message, when code is used.
-     * @attr default|text The default message to output if the error or code cannot be found in messages.properties.
-     * @attr locale override locale to use instead of the one detected
-     * @attr htmlEscape boolean value to html escape or not. 'false' by default.
-     * @attr javaScriptEscape boolean value to javascript escape. 'false' by default.
-     */
-    Closure message = { Map attrs ->
-        String msg = resolveMessage(attrs);
-
-        if (!attrs.containsKey(GspTagUtils.HTML_ESCAPE_ATTR_NAME))
-            attrs.htmlEscape = false
-
-        msg = htmlEscape(attrs, msg)
-        msg = javascriptEscape(attrs,msg)
-
-        return msg
-    }
-
-    /**
-     * Resolve the specified message into a concrete message String.
-     * The returned message String should be unescaped.
-     */
-    @CompileStatic
-    protected String resolveMessage(Map attrs) throws NoSuchMessageException
-    {
-        MessageSource messageSource = getRequestContext().getMessageSource();
-        Locale locale = null
-        if (messageSource == null)
-        {
-            throwTagError("No corresponding MessageSource found for <g:message />");
-        }
-        MessageSourceResolvable message = (MessageSourceResolvable) attrs.remove('message')
-
-        // Evaluate the specified MessageSourceResolvable, if any.
-        if (message != null)
-        {
-            // We have a given MessageSourceResolvable.
-            return messageSource.getMessage(message, locale);
-        }
-
-        String code = (String) attrs.remove('code')
-        String text = (String) (attrs.remove('text') ?: attrs.remove('default'))
 
 
-        if (code != null || text != null)
-        {
-            // We have a code or default text that we need to resolve.
-            Object[] argumentsArray = resolveMessageArguments(attrs);
-
-
-            if (text != null)
-            {
-                // We have a fallback text to consider.
-                return messageSource.getMessage(
-                        code, argumentsArray, text, getRequestContext().getLocale());
-            } else
-            {
-                // We have no fallback text to consider.
-                return messageSource.getMessage(
-                        code, argumentsArray, getRequestContext().getLocale());
-            }
-        }
-
-        // All we have is a specified literal text.
-        return text;
-    }
-
-    /**
-     * Resolve the given arguments Object into an arguments array.
-     * @param arguments the specified arguments Object
-     * @return the resolved arguments as array
-     */
-    @CompileStatic
-    protected Object[] resolveMessageArguments(Map attrs)
-    {
-        def arguments = attrs.remove('args') ?: attrs.remove('arguments')
-        String separator = (attrs.remove('separator') ?: attrs.remove('argumentSeparator')) ?: DEFAULT_ARGUMENT_SEPARATOR
-        if (arguments instanceof String)
-        {
-            String[] stringArray =
-                    StringUtils.delimitedListToStringArray((String) arguments, separator);
-            if (stringArray.length == 1)
-            {
-                Object argument = stringArray[0];
-                if (argument != null && argument.getClass().isArray())
-                {
-                    return ObjectUtils.toObjectArray(argument);
-                } else
-                {
-                    return [argument] as Object[]
-                }
-            } else
-            {
-                return stringArray;
-            }
-        } else if (arguments instanceof Object[])
-        {
-            return (Object[]) arguments;
-        } else if (arguments instanceof Collection)
-        {
-            return ((Collection<?>) arguments).toArray();
-        } else if (arguments != null)
-        {
-            // Assume a single argument object.
-            return [arguments] as Object[]
-        } else
-        {
-            return null;
-        }
-    }
 
 
     def url = { Map attrs ->
@@ -550,46 +467,22 @@ class ApplicationTagLib implements
      * @attr type encoding type. one of : 'html','javascript',
      *
      */
-    def encode = { Map attrs ->
-        return encodeImpl(attrs)
+    def escape = { Map attrs ->
+        return escapeImpl(attrs,'escape', null)
     }
 
-    @CompileStatic
-    String encodeImpl(Map attrs)
-    {
-
-        def type = attrs.remove('type') ?: 'html'
-        def types = (type instanceof String) ? [type] : type instanceof String[] ? ((String[]) type).toList()
-                : ((Collection<String>) type)
-
-
-
-        def value = attrs.remove('value')
-        if (!value)
-            throwTagError("value attribute is required for <g:encode>")
-
-        String valueStr = ObjectUtils.getDisplayString(value)
-        String out = valueStr
-        types.each { it ->
-            String typeString = it.toString()
-            if ('html'.equalsIgnoreCase(typeString))
-                out = htmlEscape(out)
-            else if ('javascript'.equalsIgnoreCase(typeString) || 'js'.equalsIgnoreCase(typeString))
-                out = JavaScriptUtils.javaScriptEscape(out)
-            else
-            {
-                def encoder = codecLookup?.lookupEncoder(typeString)
-                if (encoder)
-                    out = encoder.encode(out).toString()
-                else
-                    throwTagError("No suitable encoder found for type attribute [${type}] of <g:encode>")
-            }
-
-
-        }
-
-        out
+    def escapeBody = { Map attrs, Closure body ->
+        return escapeImpl(attrs,'escapeBody', body)
     }
+
+
+    def raw = { Map attrs, body  ->
+        attrs.codec = 'Raw'
+        return escapeImpl(attrs,'raw',body)
+    }
+
+
+
 
 
 }

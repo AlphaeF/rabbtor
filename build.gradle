@@ -28,10 +28,11 @@ apply plugin: 'idea'
 
 
 ext {
-    bintrayPublish = true
+
     // Sets release version
-    rabbtorVersion = '1.0.0-rc-1'
+    rabbtorVersion = '1.0.1'
     isBuildSnapshot = rabbtorVersion.endsWith(".BUILD-SNAPSHOT")
+    bintrayPublish = !isBuildSnapshot
     isTravisBuild = System.getenv().get("TRAVIS") == 'true'
 
     antTraxVersion = "1.7.1"
@@ -215,7 +216,8 @@ subprojects { project ->
         options.docEncoding "UTF-8"
         options.charSet "UTF-8"
         options.jFlags "-Xms64M", "-Xmx512M"
-        if(!isJava8Compatible) {
+        if (!isJava8Compatible)
+        {
             options.jFlags "-XX:MaxPermSize=256m"
         }
 
@@ -294,8 +296,8 @@ subprojects { project ->
             // Testing
             testCompile "junit:junit:${junitVersion}"
 
-            testCompile ("org.springframework:spring-test:${springVersion}") {
-                exclude group:'*'
+            testCompile("org.springframework:spring-test:${springVersion}") {
+                exclude group: '*'
             }
 
             // Required by Spock's Mocking
@@ -371,31 +373,36 @@ subprojects { project ->
 
         publishing {
 
-            repositories {
-                maven {
-                    credentials {
-                        def u = System.getenv("ARTIFACTORY_USERNAME") ?: project.hasProperty("artifactoryPublishUsername") ? project.artifactoryPublishUsername : ''
-                        def p = System.getenv("ARTIFACTORY_PASSWORD") ?: project.hasProperty("artifactoryPublishPassword") ? project.artifactoryPublishPassword : ''
-                        username = u
-                        password = p
-                    }
-                    if (isBuildSnapshot)
-                    {
-                        url "https://rabbytes.bintray.com/maven-snapshots-local"
-                    } else
-                    {
-                        url "http://rabbytes.bintray.com/maven-releases-local"
-                    }
-                }
-            }
+//            repositories {
+//                maven {
+//                    credentials {
+//                        def u = System.getenv("ARTIFACTORY_USERNAME") ?: project.hasProperty("artifactoryPublishUsername") ? project.artifactoryPublishUsername : ''
+//                        def p = System.getenv("ARTIFACTORY_PASSWORD") ?: project.hasProperty("artifactoryPublishPassword") ? project.artifactoryPublishPassword : ''
+//                        username = u
+//                        password = p
+//                    }
+//                    if (isBuildSnapshot)
+//                    {
+//                        url "https://rabbytes.bintray.com/maven-snapshots-local"
+//                    } else
+//                    {
+//                        url "http://rabbytes.bintray.com/maven-releases-local"
+//                    }
+//                }
+//            }
 
             publications {
                 maven(MavenPublication) {
                     from components.java
 
-//                    artifact sourcesJar {
-//                        classifier "sources"
-//                    }
+                    if (isBuildSnapshot)
+                    {
+                        artifact sourcesJar {
+                            classifier "sources"
+                        }
+                    }
+
+
                     artifact javadocJar {
                         classifier "javadoc"
                     }
@@ -412,6 +419,9 @@ subprojects { project ->
 
 
         bintray {
+
+
+
             def u = System.getenv("BINTRAY_USER") ?: project.hasProperty("bintrayUser") ? project.bintrayUser : ''
             def p = System.getenv("BINTRAY_KEY") ?: project.hasProperty("bintrayKey") ? project.bintrayKey : ''
 
@@ -478,6 +488,8 @@ subprojects.each { evaluationDependsOn it.path }
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
+
+
 
 
 

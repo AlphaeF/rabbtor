@@ -1,3 +1,17 @@
+/*
+ * Copyright 2016 - Rabbytes Incorporated
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains
+ * the property of Rabbytes Incorporated and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to Rabbytes Incorporated
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Rabbytes Incorporated.
+ */
 package com.rabbtor.gsp.tags
 
 import com.rabbtor.gsp.taglib.AbstractTagLibTests
@@ -5,7 +19,6 @@ import com.rabbtor.model.annotation.DisplayName
 import com.rabbtor.model.annotation.Model
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import org.jsoup.nodes.Entities
 import org.jsoup.parser.Parser
 import org.junit.Test
@@ -16,7 +29,7 @@ import org.springframework.web.util.HtmlUtils
 @RunWith(SpringJUnit4ClassRunner)
 class FormTagLibTests extends AbstractTagLibTests
 {
-    TagLibTestCarCommand cmd
+    CarCommand cmd
 
     @Override
     void setup()
@@ -28,8 +41,8 @@ class FormTagLibTests extends AbstractTagLibTests
         request.setRequestURI("/myapp/index")
         request.setQueryString("a=1&b=2")
 
-        cmd = new TagLibTestCarCommand()
-        cmd.parts << new TagLibTestCarPartCommand()
+        cmd = new CarCommand()
+        cmd.parts << new CarPartCommand()
         cmd.parts[0].dateProduced = cmd.dateProduced
         cmd.parts[0].id = 99
 
@@ -120,7 +133,7 @@ class FormTagLibTests extends AbstractTagLibTests
             <g:input type='password' path="brand"  />
             <g:checkbox path="brand" value="${carCommand.brand}" />
             <g:radio path="brand" value="${carCommand.brand}" />
-            <g:textarea path="brand" value="${carCommand.brand}" />
+            <g:textarea path="brand">${carCommand.brand}</g:textarea>" />
         '''
         String out = executeTemplateWithinForm(template)
 
@@ -336,12 +349,6 @@ class FormTagLibTests extends AbstractTagLibTests
         assert inputs.count { it.attr('checked') == 'checked'} == 3
     }
 
-    Document parseDoc(String content)
-    {
-        Document doc = Jsoup.parse(content,'',Parser.xmlParser())
-        doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml)
-        doc
-    }
 
     @Test
     void testLabel() {
@@ -412,6 +419,37 @@ class FormTagLibTests extends AbstractTagLibTests
         assert out.contains('>'+ HtmlUtils.htmlEscape(binding.factories[0].toString()) + '</option>')
     }
 
+    @Test
+    void testWithModel() {
+        cmd.brand = "<b>Brand</b>"
+
+        String template = '''
+            <g:withModel modelAttribute="carCommand" >
+                <g:label path="id"  />
+                <g:label path="brand"  />
+                <g:label path="parts[0].id"  />
+                <g:label path="dateProduced" />
+                <g:label path="dateProduced" htmlEscape="false" />
+            </g:withModel>
+        '''
+
+
+        String out = executeTemplate(template)
+        def labels = Jsoup.parse(out).getElementsByTag('label')
+
+        assert labels.size() == 5
+        assert labels[0].attr('for') == 'id'
+        assert labels[1].attr('for') == 'brand'
+        assert labels[2].attr('for') == 'parts0.id'
+
+        assert labels[0].html().trim() == "Car Id"
+
+        // Although there is a message "car.brand", "carCommand.brand" overrides it
+        assert labels[1].html().trim() == applicationContext.getMessage("carCommand.brand",null,null)
+        assert labels[2].html().trim() == "Part Number"
+        assert labels[3].html().trim() == HtmlUtils.htmlEscape(applicationContext.getMessage("car.dateProduced",null,null))
+        assert labels[4].html().trim() == applicationContext.getMessage("car.dateProduced",null,null)
+    }
 
 
     @Test
@@ -467,62 +505,5 @@ class FormTagLibTests extends AbstractTagLibTests
     }
 
 
-    @Model("car")
-    class TagLibTestCarCommand
-    {
-        @DisplayName("Car Id")
-        Long id = 100
-        int model = 2016
 
-        String brand = '<b>BMW</b>'
-        CarFactoryCommand factory = new CarFactoryCommand()
-        Boolean produced = true
-        Boolean onSale
-        Boolean hasDiscount
-        List<TagLibTestCarPartCommand> parts = []
-        String[] orderLocations = []
-        Date dateProduced = new Date()
-        Double weight = 10.5
-
-
-        UUID uniqueId = UUID.randomUUID()
-
-    }
-
-    class TagLibTestCarPartCommand
-    {
-        @DisplayName("Part Number")
-        Long id
-        Date dateProduced = new Date()
-
-
-    }
-
-    class CarFactoryCommand
-    {
-        Long id
-        String name = '<b>Germany</b>'
-        String email = "info@bmw.com"
-
-        CarFactoryCommand()
-        {
-        }
-
-        CarFactoryCommand(Long id, String name)
-        {
-            this.id = id
-            this.name = name
-        }
-
-
-        @Override
-        public String toString()
-        {
-            return "CarFactoryCommand{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", email='" + email + '\'' +
-                    '}';
-        }
-    }
 }

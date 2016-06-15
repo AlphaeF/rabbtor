@@ -1,11 +1,25 @@
+/*
+ * Copyright 2016 - Rabbytes Incorporated
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains
+ * the property of Rabbytes Incorporated and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to Rabbytes Incorporated
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Rabbytes Incorporated.
+ */
 package com.rabbtor.gsp.tags
 
 import com.rabbtor.gsp.taglib.AbstractTagLibTests
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
-import org.springframework.test.context.web.WebAppConfiguration
+import org.springframework.web.util.HtmlUtils
+import org.springframework.web.util.JavaScriptUtils
 
 import javax.servlet.http.Cookie
 
@@ -15,74 +29,96 @@ class ApplicationTagLibTests extends AbstractTagLibTests
 
 
     @Test
-    public void testMessage()
+    public void testEscape()
     {
-        assert executeTemplate("<g:message code='name' />").contains('foo')
-        assert executeTemplate("<g:message code='missing' default='defaultMessage' />").contains('defaultMessage')
-        assert executeTemplate("<g:message code='missing' text='defaultMessage' />").contains('defaultMessage')
+        assert executeTemplate('<g:escape value=\'${g.message(code:"sample.html")}\' codec="HTML" />').trim() == applicationContext.getMessage("sample.html.encoded", null, null)
+        assert executeTemplate('<g:escape value=\'${g.message(code:"sample.javascript")}\' codec="JavaScript" />').trim() == applicationContext.getMessage("sample.javascript.encoded", null, null)
+    }
 
-        def out = executeTemplate("<g:message code='name' text='defaultMessage' />")
-        assert out.contains('foo') && !out.contains('defaultMessage')
+    @Test
+    public void testEscapeBody()
+    {
 
-        // by default, output must be raw
-        assert executeTemplate("<g:message code='sample.html' />").contains('<')
+        assert executeTemplate('<g:escapeBody codec="HTML"><br></g:escapeBody>').trim() == HtmlUtils.htmlEscape("<br>")
+        assert executeTemplate('<g:escapeBody codec="Javascript">\'/<>&"</g:escapeBody>').trim() == JavaScriptUtils.javaScriptEscape('\'/<>&"')
+    }
 
-        // test html escape
-        out = executeTemplate("<g:message code='sample.html' htmlEscape='' />")
-        assert out.trim() == applicationContext.getMessage("sample.html.encoded", null, null)
+    @Test
+    public void testRaw()
+    {
+        assert executeTemplate('<g:raw><br></g:raw>').trim() == "<br>"
+    }
 
-        out = executeTemplate("<g:message code='sample.javascript' javaScriptEscape='' />")
-        assert out.trim() == applicationContext.getMessage("sample.javascript.encoded", null, null)
+    @Test
+    public void testHtmlEscapeToSetDefault()
+    {
+        String template = '''
+            <%@ page import="com.rabbtor.gsp.util.GspTagUtils" %>
+            <g:set var="requestContext" value="${GspTagUtils.ensureRequestContext(request,response,application)}" />
+            <g:htmlEscape />
+            <span id="active">${requestContext.defaultHtmlEscape}</span>
+            <g:htmlEscape defaultHtmlEscape="false" />
+            <span id="passive">${requestContext.defaultHtmlEscape}</span>
+            <g:htmlEscape defaultHtmlEscape="true" />
+            <span id="activeAgain">${requestContext.defaultHtmlEscape}</span>
 
-        // test args
-        out = executeTemplate("<g:message code='msgWithArgs' args=\"[10,'test']\" />")
-        assert out.trim() == applicationContext.getMessage("msgWithArgs", [10, 'test'] as Object[], null)
+        '''
+        String out = executeTemplate(template)
+        def doc = parseDoc(out)
 
-        // args and html escape
-        out = executeTemplate("<g:message code='msgWithArgs' args=\"[10,'test']\" htmlEscape='' />")
-        assert out.trim() == applicationContext.getMessage("msgWithArgs.html.encoded", [10, 'test'] as Object[], null)
+        assert doc.getElementById('active').html() == 'true'
+        assert doc.getElementById('passive').html() == 'false'
+        assert doc.getElementById('activeAgain').html() == 'true'
 
-        // args with default message instead of code
-        out = executeTemplate("<g:message code='missing' default='{0}-{1}' args=\"[10,'test']\" />")
-        assert out.trim() == applicationContext.getMessage("missing", [10, 'test'] as Object[], "{0}-{1}", Locale.US)
-
-        // test message tag as call
-        executeTemplate('${g.message(code:"name")}').trim() == applicationContext.getMessage('name', null, null)
-        executeTemplate('${g.message(code:"sample.html",htmlEscape:true)}').trim() == applicationContext.getMessage('sample.html.encoded', null, null)
 
     }
 
     @Test
-    public void testIfMissingMessageThrowsError()
+    public void testWithHtmlEscape()
     {
-        thrown.expect(Exception)
-        executeTemplate("<g:message code='missing' />")
+        String template = '''
+            <%@ page import="com.rabbtor.gsp.util.GspTagUtils" %>
+            <g:set var="requestContext" value="${GspTagUtils.ensureRequestContext(request,response,application)}" />
+            <% requestContext.defaultHtmlEscape=false %>
+            <g:withHtmlEscape >
+                <span id="active">${requestContext.defaultHtmlEscape}</span>
+            </g:withHtmlEscape>
+            <g:withHtmlEscape defaultHtmlEscape="false">
+                <span id="passive">${requestContext.defaultHtmlEscape}</span>
+            </g:withHtmlEscape>
+            <g:withHtmlEscape defaultHtmlEscape="true">
+                <span id="activeAgain">${requestContext.defaultHtmlEscape}</span>
+            </g:withHtmlEscape>
+
+        '''
+        String out = executeTemplate(template)
+        def doc = parseDoc(out)
+
+        assert doc.getElementById('active').html() == 'true'
+        assert doc.getElementById('passive').html() == 'false'
+        assert doc.getElementById('activeAgain').html() == 'true'
     }
 
-    @Test
-    public void testEncode()
-    {
-        assert executeTemplate('<g:encode value=\'${g.message(code:"sample.html")}\' type="html" />').trim() == applicationContext.getMessage("sample.html.encoded", null, null)
-        assert executeTemplate('<g:encode value=\'${g.message(code:"sample.javascript")}\' type="javascript" />').trim() == applicationContext.getMessage("sample.javascript.encoded", null, null)
-    }
 
     @Test
-    public void testCookie() {
-        request.setCookies(new Cookie('id','100'))
+    public void testCookie()
+    {
+        request.setCookies(new Cookie('id', '100'))
         assert executeTemplate('<g:cookie name="id" />').trim() == '100'
         assert executeTemplate('${g.cookie(name:"id")}').trim() == '100'
     }
 
     @Test
-    public void testHeader() {
-        request.addHeader('content-type','text/html')
+    public void testHeader()
+    {
+        request.addHeader('content-type', 'text/html')
         assert executeTemplate('<g:header name="content-type" />').trim() == 'text/html'
     }
 
     @Test
-    public void testUrl() {
+    public void testUrl()
+    {
         request.setContextPath('/myapp')
-
 
         // context relative
         assert executeTemplate('<g:url value="~/go" />').trim() == '/myapp/go'
@@ -103,7 +139,7 @@ class ApplicationTagLibTests extends AbstractTagLibTests
         assert executeTemplate('<g:url value="http://go" />').trim() == 'http://go'
 
         // with variables
-        def params = [['id',10],['name','foo'],['extra','1']]
-        assert executeTemplate('<g:url value="~/go/{id}/{name}" params="${params}" />',[params: params]).trim() == '/myapp/go/10/foo?extra=1'
+        def params = [['id', 10], ['name', 'foo'], ['extra', '1']]
+        assert executeTemplate('<g:url value="~/go/{id}/{name}" params="${params}" />', [params: params]).trim() == '/myapp/go/10/foo?extra=1'
     }
 }

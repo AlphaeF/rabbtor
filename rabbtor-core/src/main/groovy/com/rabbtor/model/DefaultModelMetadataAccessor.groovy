@@ -126,14 +126,30 @@ public class DefaultModelMetadataAccessor implements ModelMetadataAccessor
         if (StringUtils.hasText(declaringModelName))
             result << declaringModelName + Errors.NESTED_PATH_SEPARATOR + propertyName
 
-        if (modelName == null)
-            modelName = createDefaultModelName(modelMetadata)
+        String defaultModelName = createDefaultModelName(modelMetadata)
 
-        String propertyPathWithoutIndexes = propertyPath.replaceAll("\\[.*\\]","")
-        if (propertyPathWithoutIndexes.length() != propertyPath)
-            result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPathWithoutIndexes
 
-        result << modelName + Errors.NESTED_PATH_SEPARATOR + propertyPath
+
+        // append property path to the model name. first for the default model name, then the given model name
+        // registerCmd.addresses[0].name
+        // registerCmd.addresses.name
+        def modelNamePrefixes = [defaultModelName]
+        if (modelName != defaultModelName)
+            modelNamePrefixes << modelName
+
+        modelNamePrefixes.each { prefix ->
+            if (prefix)
+            {
+                String propertyPathWithoutIndexes = propertyPath.replaceAll("\\[.*\\]", "")
+                if (propertyPathWithoutIndexes.length() != propertyPath.length())
+                {
+                    result << prefix + Errors.NESTED_PATH_SEPARATOR + propertyPathWithoutIndexes
+                }
+                result << prefix + Errors.NESTED_PATH_SEPARATOR + propertyPath
+            }
+        }
+
+
 
         result = result.unique().reverse()
 

@@ -1,3 +1,17 @@
+/*
+ * Copyright 2016 - Rabbytes Incorporated
+ * All Rights Reserved.
+ *
+ * NOTICE:  All information contained herein is, and remains
+ * the property of Rabbytes Incorporated and its suppliers,
+ * if any.  The intellectual and technical concepts contained
+ * herein are proprietary to Rabbytes Incorporated
+ * and its suppliers and may be covered by U.S. and Foreign Patents,
+ * patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Rabbytes Incorporated.
+ */
 package com.rabbtor.gsp.taglib
 
 import com.rabbtor.gsp.config.annotation.EnableWebGsp
@@ -8,6 +22,10 @@ import org.grails.buffer.GrailsPrintWriter
 import org.grails.gsp.GroovyPagesTemplateEngine
 import org.grails.web.servlet.mvc.GrailsWebRequest
 import org.grails.web.util.WebUtils
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Entities
+import org.jsoup.parser.Parser
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -76,6 +94,13 @@ abstract class AbstractTagLibTests extends GroovyTestCase
         reader.close()
         def writable = binding ? template.make(binding) : template.make()
         return writeTemplate(writable)
+    }
+
+    Document parseDoc(String content)
+    {
+        Document doc = Jsoup.parse(content,'',Parser.xmlParser())
+        doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml)
+        doc
     }
 
     @Configuration

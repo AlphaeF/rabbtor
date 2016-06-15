@@ -23,18 +23,12 @@ import grails.artefact.TagLibrary
 import groovy.transform.CompileStatic
 import org.grails.buffer.GrailsPrintWriter
 import org.grails.encoder.CodecLookup
-import org.grails.encoder.Encoder
 import org.grails.taglib.GroovyPageAttributes
 import org.grails.web.servlet.mvc.GrailsWebRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.convert.ConversionService
 import org.springframework.util.ObjectUtils
-import org.springframework.validation.BeanPropertyBindingResult
-import org.springframework.validation.BindingResult
 import org.springframework.validation.DataBinder
-import org.springframework.web.bind.WebDataBinder
-import org.springframework.web.bind.support.DefaultDataBinderFactory
-import org.springframework.web.bind.support.WebDataBinderFactory
 import org.springframework.web.bind.support.WebRequestDataBinder
 import org.springframework.web.context.request.NativeWebRequest
 import org.springframework.web.context.request.RequestContextHolder
@@ -77,23 +71,9 @@ trait TagLibraryExt extends TagLibrary
         return this.@codecLookup
     }
 
-    /**
-     *  attribute for the
-     * page-level {@link org.springframework.web.servlet.support.RequestContext} instance.
-     */
-    public static final String REQUEST_CONTEXT_PAGE_ATTRIBUTE =
-            "org.springframework.web.servlet.tags.REQUEST_CONTEXT";
-
-
     RequestContext getRequestContext()
     {
-        def result = (RequestContext) request.getAttribute(REQUEST_CONTEXT_PAGE_ATTRIBUTE)
-        if (result == null)
-        {
-            result = new RequestContext(request, response, servletContext, null)
-            request.setAttribute(REQUEST_CONTEXT_PAGE_ATTRIBUTE, result)
-        }
-        return result
+        GspTagUtils.ensureRequestContext(request,response,servletContext)
     }
 
     /**
@@ -329,5 +309,56 @@ trait TagLibraryExt extends TagLibrary
         }
         return applicationContext?.getBeansOfType(ConversionService).values()[0]
 
+    }
+
+    String escapeImpl(Map attrs,String tag, Closure body)
+    {
+
+        def type = attrs.remove('codec') ?: 'HTML'
+        def types = []
+        if (type instanceof String ) {
+
+            types = ((String)type).split(',').collect { String str-> str.trim() }
+        } else {
+            types = type instanceof String[] ? ((String[]) type).toList()
+                    : ((Collection<String>) type)
+        }
+
+        if (body == null && !attrs.containsKey('value'))
+            throwTagError("[value] attribute is required for <g:${tag}>")
+
+        String outVal
+        if (attrs.containsKey('value'))
+            outVal = ObjectUtils.getDisplayString(attrs.value)
+        else
+            outVal = (String)body()
+
+
+        types.each { it ->
+            String typeString = it.toString()
+            if (['Raw','None'].any { raw -> raw.equalsIgnoreCase(typeString)})
+                return
+            else if ('HTML'.equalsIgnoreCase(typeString))
+            {
+                outVal = htmlEscape(outVal)
+            }
+            else if ('JavaScript'.equalsIgnoreCase(typeString) || 'Js'.equalsIgnoreCase(typeString))
+                outVal = JavaScriptUtils.javaScriptEscape(outVal)
+            else
+            {
+                def encoder = codecLookup?.lookupEncoder(typeString)
+                if (encoder)
+                    outVal = encoder.encode(outVal).toString()
+                else
+                    throwTagError("No suitable encoder found for type attribute [${type}] of ${tag}")
+            }
+        }
+
+
+        if (!attrs.containsKey('value')) {
+            out << outVal
+        }
+
+        outVal
     }
 }

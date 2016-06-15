@@ -21,4 +21,8 @@ dependencies {
 
     testCompile 'org.jsoup:jsoup:1.9.2'
 
+    // hibernate validator
+    testCompile group: 'org.hibernate', name: 'hibernate-validator', version: '4.3.2.Final'
+
+
 }

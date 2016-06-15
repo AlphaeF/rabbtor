@@ -20,13 +20,13 @@
 package com.rabbtor.gsp.tags
 
 import com.rabbtor.gsp.taglib.TagLibraryExt
+import com.rabbtor.gsp.util.GspTagUtils
 import com.rabbtor.model.ModelMetadataAccessor
-import com.rabbtor.model.ModelMetadataAccessorUtils
 import com.rabbtor.web.servlet.model.WebModelMetadataUtils
-import com.rabbtor.web.servlet.util.RequestContextUtils
 import grails.gsp.TagLib
 import groovy.transform.CompileStatic
 import org.grails.encoder.CodecLookup
+import org.grails.taglib.AbstractTemplateVariableBinding
 import org.grails.taglib.GroovyPageAttributes
 import org.springframework.beans.BeanWrapper
 import org.springframework.beans.PropertyAccessor
@@ -98,11 +98,7 @@ class FormTagLib implements TagLibraryExt
     /** The default HTTP method using which form values are sent to the server: "post" */
     private static final String DEFAULT_METHOD = "post";
 
-    /**
-     * Name of the exposed path variable within the scope of this tag: "nestedPath".
-     * Same value as {org.springframework.web.servlet.tags.NestedPathTag#NESTED_PATH_VARIABLE_NAME}.
-     */
-    public static final String NESTED_PATH_VARIABLE_NAME = "nestedPath";
+    
 
     /** The default attribute name: &quot;command&quot; */
     public static final String DEFAULT_COMMAND_NAME = "command";
@@ -117,8 +113,6 @@ class FormTagLib implements TagLibraryExt
     public static
     final String MODEL_ATTRIBUTE_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.${MODEL_ATTRIBUTE}"
 
-    public static
-    final String MODEL_OBJECT_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.modelObject"
 
     public static
     final String DATA_BINDER_VARIABLE_NAME = "org.springframework.web.servlet.tags.form.dataBinder"
@@ -134,31 +128,6 @@ class FormTagLib implements TagLibraryExt
      */
     Closure form = { attrs, body ->
 
-        String modelAttribute = (attrs.remove(MODEL_ATTRIBUTE) ?: attrs.remove('commandName')) ?: DEFAULT_COMMAND_NAME
-        request.setAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, modelAttribute)
-
-        Object modelObject = request.getAttribute(MODEL_OBJECT_VARIABLE_NAME)
-        if (modelObject == null)
-        {
-            modelObject = RequestContextUtils.getModelObject(requestContext, request, modelAttribute)
-            if (modelObject)
-            {
-                request.setAttribute(MODEL_OBJECT_VARIABLE_NAME, modelObject)
-
-                // in mvc environment, this should not happen because RequestMappingHandlerAdapter uses ModelFactory to add a default bindingResult
-                if (requestContext.getErrors(modelAttribute) == null)
-                    request.setAttribute(DATA_BINDER_VARIABLE_NAME, createBinder(modelObject, modelAttribute))
-            }
-
-
-        }
-
-        // Save previous nestedPath value, build and expose current nestedPath value.
-        // Use request scope to expose nestedPath to included pages too.
-        String previousNestedPath =
-                (String) request.getAttribute(NESTED_PATH_VARIABLE_NAME);
-        request.setAttribute(NESTED_PATH_VARIABLE_NAME,
-                modelAttribute + PropertyAccessor.NESTED_PROPERTY_SEPARATOR);
 
         // Set action and method
         attrs.method = getHttpMethod(attrs)
@@ -184,24 +153,96 @@ class FormTagLib implements TagLibraryExt
         // RENDER the TAG content
         attrs.tagName = 'form'
 
-        out << g.elm(attrs, body)
-
-        // cleanup
-        request.removeAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME)
-        request.removeAttribute(MODEL_OBJECT_VARIABLE_NAME)
-        request.removeAttribute(DATA_BINDER_VARIABLE_NAME)
-
-        if (previousNestedPath != null)
-        {
-            // Expose previous nestedPath value.
-            request.setAttribute(NESTED_PATH_VARIABLE_NAME, previousNestedPath);
-        } else
-        {
-            // Remove exposed nestedPath value.
-            request.removeAttribute(NESTED_PATH_VARIABLE_NAME);
-        }
+        withModelImpl(attrs, { ->
+            attrs.remove('override')
+            out << g.elm(attrs,body)
+            null
+        })
 
     }
+
+    Closure bind = { Map attrs, body ->
+        String resolvedPath = getPath(attrs);
+        boolean ignoreNestedPath = getHtmlBooleanAttributeValue(attrs,'ignoreNestedPath')
+
+        if (!ignoreNestedPath) {
+            String nestedPath = GspTagUtils.getNestedPath(request)
+            // only prepend if not already an absolute path
+            if (nestedPath != null && !resolvedPath.startsWith(nestedPath) &&
+                    !resolvedPath.equals(nestedPath.substring(0, nestedPath.length() - 1))) {
+                resolvedPath = nestedPath + resolvedPath;
+            }
+        }
+
+        BindStatus bindStatus
+        try {
+            bindStatus = new BindStatus(getRequestContext(), resolvedPath, isHtmlEscape(attrs));
+        }
+        catch (IllegalStateException ex) {
+            throwTagError(ex.message)
+        }
+
+        // Save previous status values, for re-exposure at the end of this tag.
+        def previousPageStatus = pageScope.getVariable(GspTagUtils.STATUS_VARIABLE_NAME)
+        def previousRequestStatus = request.getAttribute(GspTagUtils.STATUS_VARIABLE_NAME);
+
+        // Expose this tag's status object as PageContext attribute,
+        // making it available for JSP EL.
+
+
+
+        pageScope[GspTagUtils.STATUS_VARIABLE_NAME] = bindStatus
+        request.setAttribute(GspTagUtils.STATUS_VARIABLE_NAME, bindStatus);
+
+        if (body)
+            out << body()
+
+        if (previousPageStatus != null) {
+            pageScope[GspTagUtils.STATUS_VARIABLE_NAME] = previousPageStatus
+        } else
+            pageScope.variables?.remove(GspTagUtils.STATUS_VARIABLE_NAME)
+
+        if (previousRequestStatus != null) {
+            request.setAttribute(GspTagUtils.STATUS_VARIABLE_NAME,previousRequestStatus)
+        }
+        else {
+            request.removeAttribute(GspTagUtils.STATUS_VARIABLE_NAME)
+        }
+    }
+
+
+    Closure withModel = { Map attrs, body->
+        withModelImpl(attrs,body)
+    }
+
+    @CompileStatic
+    void withModelImpl(Map attrs, Closure body) {
+        String modelAttribute = (attrs.remove(MODEL_ATTRIBUTE) ?: attrs.remove('commandName')) ?: DEFAULT_COMMAND_NAME
+        boolean override = attrs.containsKey('override') ? (Boolean)attrs.override : false
+
+        def previousModelAttribute = request.getAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME)
+        def put = previousModelAttribute == null || override
+
+        String previousNestedPath
+
+
+        if (put) {
+            request.setAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME, modelAttribute)
+            previousNestedPath = GspTagUtils.beginNestedPath(modelAttribute + PropertyAccessor.NESTED_PROPERTY_SEPARATOR,request)
+        }
+
+        if (body)
+           out << (String)body()
+
+        if (put)
+        {
+            // cleanup
+            request.removeAttribute(MODEL_ATTRIBUTE_VARIABLE_NAME)
+
+            GspTagUtils.endNestedPath(previousNestedPath,request)
+        }
+    }
+
 
     /**
      * Put unobtrusive ajax HTML 5 attributes to the current form tag attributes
@@ -373,9 +414,9 @@ class FormTagLib implements TagLibraryExt
         out << g.elm(attrs, body)
     }
 
-    Closure displayNameFor = { attrs ->
+    Closure displayNameFor = { Map attrs ->
         getRequiredAttribute(attrs, 'path', 'g:displayName')
-        def model = request.getAttribute(MODEL_OBJECT_VARIABLE_NAME)
+        def model = GspTagUtils.getModelObject(getBindStatus(attrs),request,requestContext)
         if (!model)
         {
             throw new IllegalStateException("Could not retrive model object.Please make sure you called <g:displayNameFor> within a <g:form>");
@@ -585,8 +626,14 @@ class FormTagLib implements TagLibraryExt
     Closure textarea = { attrs, body ->
         getRequiredAttribute(attrs, 'path', '<g:textarea>')
         attrs.tagName = 'textarea'
-        attrs.value = processFieldValue(getName(attrs), getDisplayString(attrs, getBindStatus(attrs).value), attrs.type)
-        return fieldImpl(attrs, body)
+        def value = processFieldValue(getName(attrs), getDisplayString(attrs, getBindStatus(attrs).value), 'textarea')
+
+        return fieldImpl(attrs, {
+            out << value
+            if (body)
+                out << body()
+            null
+        })
     }
 
     /**
@@ -726,7 +773,7 @@ class FormTagLib implements TagLibraryExt
      */
     String getNestedPath()
     {
-        (String) request.getAttribute(NESTED_PATH_VARIABLE_NAME);
+        GspTagUtils.getNestedPath(request)
     }
 
     /**
@@ -753,22 +800,13 @@ class FormTagLib implements TagLibraryExt
 
         assert attrs.containsKey('path'), "path attribute must be set to get a BindStatus"
 
-        String pathToUse = getFullPath(attrs)
-        BindStatus bindStatus = getRequestContext().getBindStatus(pathToUse, false)
+        BindStatus bindStatus = GspTagUtils.getBindStatus(getPath(attrs),request,getRequestContext(),false)
+
         attrs.bindStatus = bindStatus
         return bindStatus;
     }
 
-    String getFullPath(Map attrs)
-    {
-        String nestedPath = getNestedPath();
-        String pathToUse = (nestedPath != null ? nestedPath + getPath(attrs) : getPath(attrs));
-        if (pathToUse.endsWith(PropertyAccessor.NESTED_PROPERTY_SEPARATOR))
-        {
-            pathToUse = pathToUse.substring(0, pathToUse.length() - 1);
-        }
-        return pathToUse
-    }
+
 /**
  * Overrides {@link TagLibraryExt#isDefaultHtmlEscape()} to return <code>true</code> if the default value resolved from the
  * {@link org.springframework.web.servlet.support.RequestContext#getDefaultHtmlEscape()}  is null.
@@ -937,4 +975,6 @@ class FormTagLib implements TagLibraryExt
         if (!['get', 'post'].any { it.equalsIgnoreCase(method) })
             method = DEFAULT_METHOD
     }
+
+
 }

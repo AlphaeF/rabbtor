@@ -70,6 +70,8 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
     }
 
 
+
+
     protected GroovyPageLocator createGroovyPageLocator()
     {
         final List<String> templateRootsCleaned=resolveTemplateRoots();
