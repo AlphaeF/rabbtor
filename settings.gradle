@@ -4,4 +4,5 @@ include 'rabbtor-web'
 include 'rabbtor-common'
 include 'rabbtor-gsp'
 include 'rabbtor-web-gsp'
+include 'rabbtor-validation'
 

@@ -15,15 +15,19 @@
 package com.rabbtor.gsp.config.annotation;
 
 
+import com.rabbtor.gsp.util.GspWebUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.grails.gsp.GroovyPagesTemplateEngine;
 import org.grails.gsp.io.GroovyPageLocator;
+import org.grails.gsp.io.GroovyPageScriptSource;
 import org.grails.plugins.web.taglib.RenderTagLib;
 import org.grails.plugins.web.taglib.SitemeshTagLib;
 import org.grails.web.gsp.GroovyPagesTemplateRenderer;
 import org.grails.web.gsp.io.CachingGrailsConventionGroovyPageLocator;
 import org.grails.web.gsp.io.GrailsConventionGroovyPageLocator;
+import org.grails.web.pages.DefaultGroovyPagesUriService;
+import org.grails.web.pages.GroovyPagesUriSupport;
 import org.grails.web.servlet.view.GrailsLayoutViewResolver;
 import org.grails.web.servlet.view.GroovyPageViewResolver;
 import org.grails.web.sitemesh.GroovyPageLayoutFinder;
@@ -68,6 +72,12 @@ public abstract class WebGspConfigurationSupport extends GspConfigurationSupport
                     uri = "/" + uri;
                 }
                 return uri;
+            }
+
+            @Override
+            public GroovyPageScriptSource findViewByPath(String uri)
+            {
+                return uri == null ? null : findPage(GspWebUtils.getViewNameUri(uri,gspTemplateEngineConfig().suffix));
             }
         };
         pageLocator.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);

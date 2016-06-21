@@ -19,7 +19,7 @@ dependencies {
         exclude group:'org.springframework.boot'
     }
 
-    provided ("org.grails:grails-plugin-codecs:${grailsVersion}") {
+    compile ("org.grails:grails-plugin-codecs:${grailsVersion}") {
         exclude group:'*'
     }
     compile "commons-lang:commons-lang:${commonsLangVersion}"

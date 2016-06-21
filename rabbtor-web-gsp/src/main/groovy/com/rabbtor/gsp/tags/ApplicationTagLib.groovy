@@ -239,6 +239,10 @@ class ApplicationTagLib implements
         GspTagUtils.endNestedPath(previousNestedPath, request)
     }
 
+    Closure ignore = { attrs,body->
+
+    }
+
     Closure withHtmlEscape = { Map attrs, body ->
         def oldValue = requestContext.defaultHtmlEscape
         htmlEscape(attrs)

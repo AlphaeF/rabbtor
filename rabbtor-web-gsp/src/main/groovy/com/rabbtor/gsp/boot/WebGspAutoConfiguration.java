@@ -75,6 +75,7 @@ public class WebGspAutoConfiguration
             config.setDefaultLayoutName(gspProperties.getDefaultLayoutName());
             config.setLocatorCacheTimeout(gspProperties.getLocatorCacheTimeout());
             config.setViewCacheTimeout(gspProperties.getViewCacheTimeout());
+            config.setSuffix(gspProperties.getSuffix());
         }
 
         @Override

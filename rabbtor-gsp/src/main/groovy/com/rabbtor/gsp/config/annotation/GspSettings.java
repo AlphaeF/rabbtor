@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 public class GspSettings
 {
 
+    public static final String SUFFIX = ".gsp";
+
     @Value("${spring.gsp.reload:true}")
     boolean gspReloadingEnabled;
 
@@ -33,6 +35,12 @@ public class GspSettings
 
     @Value("${spring.gsp.templateRoots:#{null}}")
     String[] templateRoots;
+
+    @Value("${spring.gsp.suffix:.gsp}")
+    String suffix;
+
+    @Value("${spring.gsp.attributeTagsEnabled:true}")
+    boolean attributeTagsEnabled;
 
 
     @Value("${spring.gsp.view.cacheTimeout:1000}")
@@ -102,6 +110,25 @@ public class GspSettings
         this.viewCacheTimeout = viewCacheTimeout;
     }
 
+    public String getSuffix()
+    {
+        return suffix;
+    }
+
+    public void setSuffix(String suffix)
+    {
+        this.suffix = suffix;
+    }
+
+    public boolean isAttributeTagsEnabled()
+    {
+        return attributeTagsEnabled;
+    }
+
+    public void setAttributeTagsEnabled(boolean attributeTagsEnabled)
+    {
+        this.attributeTagsEnabled = attributeTagsEnabled;
+    }
 
     public GspSettings()
     {
@@ -110,6 +137,8 @@ public class GspSettings
         defaultLayoutName = null;
         gspReloadingEnabled = true;
         viewCacheTimeout = 1000;
+        suffix = SUFFIX;
+        attributeTagsEnabled = true;
 
     }
 }

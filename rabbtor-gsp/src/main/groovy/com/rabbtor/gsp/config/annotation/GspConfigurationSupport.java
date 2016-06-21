@@ -60,6 +60,7 @@ public abstract class GspConfigurationSupport extends GrailsApplicationConfigura
         GroovyPagesTemplateEngine templateEngine = new GroovyPagesTemplateEngine();
         templateEngine.setReloadEnabled(gspTemplateEngineConfig().gspReloadingEnabled);
         templateEngine.setGroovyPageLocator(groovyPageLocator());
+        templateEngine.setAttributeTagsEnabled(gspTemplateEngineConfig().isAttributeTagsEnabled());
         return templateEngine;
     }
 

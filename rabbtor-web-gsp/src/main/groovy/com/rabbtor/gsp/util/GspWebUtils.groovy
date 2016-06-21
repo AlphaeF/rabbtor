@@ -14,7 +14,9 @@
  */
 package com.rabbtor.gsp.util
 
+import com.rabbtor.gsp.config.annotation.GspSettings
 import groovy.transform.CompileStatic
+import org.grails.buffer.FastStringWriter
 import org.grails.encoder.Encoder
 import org.springframework.web.util.HtmlUtils
 import org.springframework.web.util.WebUtils
@@ -25,6 +27,8 @@ import javax.servlet.http.HttpServletResponse
 @CompileStatic
 class GspWebUtils
 {
+    public static final String SLASH = '/'
+
     public static String lookupEncoding(HttpServletResponse response, HttpServletRequest request) {
         String encoding = response ? response.getCharacterEncoding() : null
         if (encoding == null)
@@ -45,5 +49,25 @@ class GspWebUtils
             return HtmlUtils.htmlEscape(String.valueOf(object),encoding)
     }
 
+    public static String getViewNameUri(String viewName, String suffix = GspSettings.SUFFIX) {
+        FastStringWriter buf = new FastStringWriter()
+        String tmp = viewName.substring(1,viewName.length());
+        if (tmp.indexOf(SLASH) > -1) {
+            buf.append(SLASH);
+            buf.append(tmp.substring(0,tmp.lastIndexOf(SLASH)));
+            buf.append(SLASH);
+            buf.append(tmp.substring(tmp.lastIndexOf(SLASH) + 1,tmp.length()));
+        }
+        else {
+            buf.append(SLASH);
+            buf.append(viewName.substring(1,viewName.length()));
+        }
+
+        if (suffix != null) {
+            buf.append(suffix);
+        }
+
+        return buf.toString();
+    }
 
 }
